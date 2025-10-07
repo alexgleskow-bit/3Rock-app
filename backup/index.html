@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material Stock Monitoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="apple-touch-icon.png"> <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #242A31;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+        .logo-container img {
+            width: 100%;
+            max-width: 100%;
+            max-height: 100px;
+            object-fit: contain;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .main-content-wrapper { flex-grow: 1; }
+        .main-container { background-color: #2d3748; }
+        .table-section { margin-bottom: 1.5rem; }
+        .department-section { margin-bottom: 2.5rem; padding: 1rem; background-color: #374151; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);}
+        @media (min-width: 640px) { /* sm breakpoint */
+            .department-section { padding: 1.5rem; }
+        }
+        .department-title { font-size: 1.5rem; sm:font-size: 1.75rem; font-weight: 600; color: #e2e8f0; margin-bottom: 1rem; border-bottom: 2px solid #4b5563; padding-bottom: 0.5rem;}
+        .table-container { overflow-x: auto; max-width: 100%; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #4b5563; font-size: 0.875rem; vertical-align: middle; }
+        @media (min-width: 640px) { /* sm breakpoint */
+            th, td { padding: 10px 12px; font-size: 1rem; }
+        }
+        th { background-color: #4b5563; font-weight: 600; color: #cbd5e1; vertical-align: top; }
+        .department-section table td { background-color: #374151; }
+        .department-section table tr:hover td { background-color: #4a5568; }
+
+        /* --- NOWE STYLE DLA PASKA POSTĘPU --- */
+        .progress-bar-container {
+            position: relative;
+            height: 28px;
+            background-color: #1f2937;
+            border-radius: 6px;
+            overflow: hidden;
+            min-width: 150px;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
+        }
+        .progress-bar-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+        }
+        /* --- KONIEC NOWYCH STYLÓW --- */
+
+        #jobOrderConsumptionTable td { background-color: #2d3748; white-space: normal; }
+        #jobOrderConsumptionTable tr:hover td { background-color: #3b4b5c; }
+        #jobOrderConsumptionTable th { white-space: normal; background-color: #374151;}
+        .used-material-item {
+            display: inline-block;
+            margin-right: 8px;
+            margin-bottom: 4px;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+        .used-material-name-part {
+            font-weight: bold;
+            padding: 1px 3px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+        .used-material-details-part {
+             margin-left: 4px;
+             padding: 1px 3px;
+             border-radius: 2px;
+        }
+        .used-material-details-part.black-details {
+            background-color: #000000;
+            color: #ffffff;
+        }
+        .used-material-details-part.brushed-details,
+        .used-material-details-part.silver-details {
+            background-color: #C0C0C0;
+            color: #000000;
+        }
+         .used-material-details-part.gold-details {
+            background-color: #FFD700;
+            color: #000000;
+        }
+        .used-material-quantity {
+            font-weight: bold;
+            color: #ef4444;
+            margin-left: 4px;
+        }
+        .job-order-issue-icon {
+            cursor: pointer;
+            font-size: 1.25rem;
+            color: #facc15; /* Yellow warning color */
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+
+        #placedMaterialOrdersTable td, #placedMaterialOrdersTable th { white-space: normal; text-align: center; vertical-align: middle; }
+        #placedMaterialOrdersTable th {background-color: #374151;}
+        #placedMaterialOrdersTable td {background-color: #2d3748;}
+        #placedMaterialOrdersTable th:first-child,
+        #placedMaterialOrdersTable td:first-child,
+        #placedMaterialOrdersTable th:nth-child(3),
+        #placedMaterialOrdersTable td:nth-child(3) { text-align: left; }
+        .placed-order-sub-item td:first-child { padding-left: 1.5rem !important; }
+         @media (min-width: 640px) {
+            .placed-order-sub-item td:first-child { padding-left: 2.5rem !important; }
+        }
+        .placed-order-sub-item td { font-size: 0.9em; color: #bdc3c7; }
+
+        #placedMaterialOrdersTable tr.order-group-row-default:hover td,
+        #placedMaterialOrdersTable tr.placed-order-sub-item.order-group-row-default:hover td { background-color: #3b4b5c !important; }
+        #placedMaterialOrdersTable tr.order-group-row-placed td { background-color: #78350f !important; color: #fed7aa !important; }
+        #placedMaterialOrdersTable tr.order-group-row-placed:hover td { background-color: #9a3412 !important; }
+        #placedMaterialOrdersTable tr.order-group-row-delivered td { background-color: #065f46 !important; color: #a7f3d0 !important; }
+        #placedMaterialOrdersTable tr.order-group-row-delivered:hover td { background-color: #047857 !important; }
+
+        .material-header-name { font-weight: bold; font-size: 0.8rem; padding: 3px 5px; border-radius: 4px; margin-bottom: 3px; color: #ffffff; display: inline-block; width: 100%; box-sizing: border-box; }
+        .material-header-details { font-size: 0.7rem; color: #a0aec0; line-height: 1.1; padding: 2px 4px; border-radius: 3px; display: inline-block; }
+        .material-header-details-container { display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .material-color-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-left: 5px; vertical-align: middle; border: 1px solid #4b5563; }
+        .material-color-indicator.white { background-color: #ffffff; }
+        .material-select option.black-option { color: #e2e8f0; }
+        input[type="number"], input[type="text"], select, .job-order-issue-input, .issue-type-select { width: 100%; padding: 8px; border: 1px solid #4b5563; border-radius: 6px; box-sizing: border-box; font-size: 1rem; background-color: #1f2937; color: #e2e8f0; }
+        .job-order-issue-input { font-size: 0.875rem; padding: 6px 8px; margin-top: 0.5rem;}
+        .issue-type-select { margin-bottom: 0.5rem; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: #4b5563; outline: none; opacity: 0.7; transition: opacity .2s; border-radius: 4px; }
+        input[type="range"]:hover { opacity: 1; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #00D084; cursor: pointer; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; background: #00D084; cursor: pointer; border-radius: 50%; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .slider-container { display: flex; align-items: center; gap: 0.5rem; /* Reduced gap for mobile */ }
+        @media (min-width: 640px) { /* sm breakpoint */
+            .slider-container { gap: 1rem; }
+        }
+        .slider-container .slider-value, .slider-value { font-weight: bold; min-width: 30px; sm:min-width:35px; text-align: right; color: #cbd5e1; font-size: 0.9rem; sm:font-size:1rem; }
+
+        input[type="checkbox"] { width: 1.25rem; height: 1.25rem; border-radius: 0.25rem; border: 1px solid #64748b; background-color: #374151; cursor: pointer; appearance: none; -webkit-appearance: none; position: relative; vertical-align: middle; }
+        input[type="checkbox"]:checked { background-color: #00D084; border-color: #00D084; }
+        input[type="checkbox"]:checked::before { content: "✓"; display: block; text-align: center; color: #1f2937; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 0.9rem; font-weight: bold; line-height: 1; }
+        .btn { padding: 10px 16px; sm:padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: all 0.2s ease-in-out; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center;}
+        .btn-primary { background-color: #00D084; color: white; }
+        .btn-primary:hover { background-color: #00B373; transform: translateY(-1px); }
+        .btn-secondary { background-color: #00A96E; color: white; }
+        .btn-secondary:hover { background-color: #008F5C; transform: translateY(-1px); }
+        .btn-tertiary { background-color: #047857; color: white; }
+        .btn-tertiary:hover { background-color: #065f46; transform: translateY(-1px); }
+        .btn-adjust { background-color: #3b82f6; color: white; padding: 4px 8px; sm:padding: 6px 12px; font-size: 0.8rem; sm:font-size:0.875rem; box-shadow: none; margin-right: 4px; sm:margin-right: 8px; }
+        .btn-adjust:hover { background-color: #2563eb; transform: translateY(-1px); }
+        .btn-edit { background-color: #f59e0b; color: white; padding: 4px 8px; sm:padding: 6px 12px; font-size: 0.8rem; sm:font-size:0.875rem; box-shadow: none; margin-right: 4px; sm:margin-right: 8px; }
+        .btn-edit:hover { background-color: #d97706; transform: translateY(-1px); }
+        .btn-delete { background-color: #dc2626; color: white; padding: 4px 8px; sm:padding: 6px 12px; font-size: 0.8rem; sm:font-size:0.875rem; box-shadow: none; }
+        .btn-delete:hover { background-color: #b91c1c; transform: translateY(-1px); }
+        .btn-delete-job-order { background-color: transparent; color: #ef4444; padding: 2px 6px; font-size: 1.1rem; font-weight: bold; border: none; border-radius: 4px; margin-left: 8px; cursor: pointer; line-height: 1; }
+        .btn-delete-job-order:hover { background-color: #ef4444; color: white; }
+        .modal-box {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background-color: #2d3748; padding: 1.5rem; border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 1000; text-align: left;
+            width: 90%; max-width: 500px;
+            color: #e2e8f0; max-height: 85vh; overflow-y: auto;
+        }
+        @media (min-width: 640px) { /* sm breakpoint */
+            .modal-box { padding: 2rem; width: 500px; }
+        }
+        .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 999; }
+        .quantity-in { color: #34d399; font-weight: 500; }
+        .quantity-out { color: #ef4444; font-weight: 500; }
+        .quantity-zero { color: #e2e8f0; font-weight: normal; }
+        .modal-box input[type="text"], .modal-box input[type="number"], .modal-box select { background-color: #1f2937; border-color: #4b5563; color: #e2e8f0; }
+        .material-order-item { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #4b5563; }
+        .material-order-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .material-order-item label { display: block; margin-bottom: 0.25rem; font-weight: 500; }
+        .material-order-item .slider-container { margin-top: 0.25rem; margin-bottom: 0.75rem; }
+        .material-order-item .remove-order-item-btn { display: block; margin-top: 0.5rem; }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 500; color: #cbd5e1; }
+        #jobOrderConsumptionTable th:first-child { white-space: nowrap; }
+        #jobOrderConsumptionTable td:nth-child(1) { white-space: nowrap; }
+        .footer { text-align: center; padding: 1.5rem; margin-top: 2rem; font-size: 0.875rem; color: #a0aec0; border-top: 1px solid #374151; }
+        .sales-rep-prefix { padding: 2px 6px; border-radius: 4px; color: #ffffff; font-weight: bold; font-size: 0.9em; display: inline-block; }
+        .salesperson-option-prefix { font-weight: bold; margin-left: 4px; }
+        .color-legend { margin-top: 1rem; padding: 0.75rem; background-color: #374151; border-radius: 0.5rem; display: flex; flex-wrap: wrap; gap: 1rem; }
+        .legend-item { display: flex; align-items: center; font-size: 0.875rem; }
+        .legend-color-swatch { width: auto; padding: 2px 6px; border-radius: 3px; margin-right: 0.5rem; font-weight: bold; }
+        .legend-color-swatch.black-details { background-color: #000000; color: #ffffff; }
+        .legend-color-swatch.brushed-details { background-color: #C0C0C0; color: #000000; }
+        .legend-color-swatch.gold-details { background-color: #FFD700; color: #000000; }
+        .legend-color-swatch.white-indicator { width: 15px; height: 15px; background-color: #FFFFFF; border: 1px solid #64748b; padding: 0; }
+
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+    <script type="module">
+        // DEBUG: Firebase SDK script importing...
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, getDoc, setDoc, query, orderBy, where, writeBatch, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        // DEBUG: Firebase SDK script imported.
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlgesvhQe-yPxOdrdTasOFWhh88RxHsmI", // Replace with your actual Firebase config
+            authDomain: "rockers-a2c48.firebaseapp.com",
+            projectId: "rockers-a2c48",
+            storageBucket: "rockers-a2c48.appspot.com",
+            messagingSenderId: "518428210643",
+            appId: "1:518428210643:web:ca3db6dd1a22844c452b26",
+            measurementId: "G-1S1D9J4TGW"
+        };
+
+        // DEBUG: Initializing Firebase app...
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+        window.fb = { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, getDoc, setDoc, query, orderBy, where, writeBatch, serverTimestamp, runTransaction };
+        // DEBUG: Firebase app initialized and global objects set.
+    </script>
+
+    <div class="main-content-wrapper">
+        <div class="max-w-7xl mx-auto main-container rounded-xl shadow-lg p-4 sm:p-6 lg:p-10"> <div class="logo-container">
+                <img src="Logo.png" alt="Company Logo" onerror="this.onerror=null; this.src='https://placehold.co/600x150/2D3748/E2E8F0?text=Logo+Not+Found'; console.error('Original Logo.png not found.')">
+            </div>
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-100 mb-6 text-center">Material Stock Monitoring</h1> <div class="flex flex-col sm:flex-row justify-center sm:justify-start gap-3 sm:gap-4 mb-6 sm:mb-8"> <button id="addMaterialBtn" class="btn btn-primary w-full sm:w-auto">Add Material</button>
+                <button id="checkOutStockBtn" class="btn btn-secondary w-full sm:w-auto">Check Out Stock</button>
+                <button id="addMaterialOrderBtn" class="btn btn-tertiary w-full sm:w-auto">Place Material Order</button>
+                <button id="toggleArchivedOrdersBtn" class="btn btn-primary w-full sm:w-auto">View Archived Orders</button>
+                <a href="index2.html" class="btn btn-primary w-full sm:w-auto">3:nodes</a>
+			
+            </div>
+
+            <div id="stockOverviewContainer" class="table-section">
+                </div>
+
+            <div class="table-section rounded-lg shadow-md">
+                <h2 class="text-xl sm:text-2xl font-semibold text-gray-200 mb-4 px-1">Job Orders - Material Usage</h2> <div class="table-container"><table id="jobOrderConsumptionTable" class="w-full border-collapse"><thead></thead><tbody></tbody></table></div>
+            </div>
+            <div class="table-section rounded-lg shadow-md">
+                <h2 id="placedMaterialOrdersTitle" class="text-xl sm:text-2xl font-semibold text-gray-200 mb-4 px-1">Placed Material Orders</h2> <div class="table-container"><table id="placedMaterialOrdersTable" class="w-full border-collapse" style="min-width: 850px;"><thead><tr><th class="rounded-tl-lg">Material</th><th>Quantity</th><th>Ordered By</th><th>Date & Time</th><th>J.D. Number / Note</th><th>PO Number</th><th>Order Placed</th><th class="rounded-tr-lg">Delivered</th></tr></thead><tbody></tbody></table></div>
+            </div>
+        </div>
+    </div>
+    <footer class="footer"><p>&copy; <span id="currentYear"></span> Alex Leśków. All rights reserved.</p></footer>
+
+    <script>
+        // DEBUG: Main script execution started.
+
+        window.onload = () => {
+            // DEBUG: window.onload triggered.
+
+            const salespeople = [
+                { name: "Select Salesperson", prefix: "", color: "#7f8c8d" },
+                { name: "Patrice (PM)", prefix: "PM", color: "#FFBF00" },
+                { name: "Brendan (BO)", prefix: "BO", color: "#3498DB" },
+                { name: "John (JOR)", prefix: "JOR", color: "#2ECC71" },
+                { name: "Sean (SOR)", prefix: "SOR", color: "#E67E22" },
+                { name: "House Account (CD)", prefix: "CD", color: "#95A5A6" }
+            ];
+             // --- ZAKTUALIZOWANE KOLORY MATERIAŁÓW ---
+            window.materialTypeColors = {
+                "FOAMEX": "#e74c3c", "CORRIE": "#3498db", "DIBOND": "#9b59b6", "CBOND": "#9b59b6",
+                "PLYWOOD": "#f1c40f", "MDF": "#1abc9c", "BABU": "#2ecc71", "080": "#7D3C98",
+                "ALUCOBOND": "#7D3C98", "STADUR": "#48C9B0",
+                "ACRYLIC": "#34e7e7", "VINYL": "#e74c8a", "BANNER": "#2b5797",
+                "PENTA": "#6a329f", "SWEDBOARD": "#f7b731", "X-SMART FOAMBOARD": "#38a169", "BUBBLE BOARD": "#00a8cc",
+                "DEFAULT": "#7f8c8d"
+            };
+            window.definedColorTypes = { // For specific colorType styling of the details part
+                "BLACK": { name: "Black Finish", styleClass: "black-details" },
+                "WHITE": { name: "White (Indicator)", styleClass: "white-indicator" },
+                "BRUSHED": { name: "Brushed/Silver", styleClass: "brushed-details" },
+                "SILVER": { name: "Brushed/Silver", styleClass: "brushed-details" },
+                "GOLD": { name: "Gold Finish", styleClass: "gold-details" }
+            };
+            window.definedIssueTypes = [ // Predefined issue types for selection
+                { id: "no_issue", text: "No Issue / Clear" },
+                { id: "material_scratch", text: "Material Scratch" },
+                { id: "poor_quality_material", text: "Poor Quality Material" },
+                { id: "printer_problem", text: "Printer Problem" },
+                { id: "cutting_problem", text: "Cutting Problem" },
+                { id: "design_problem", text: "Design Problem" },
+                { id: "delivered_needs_correction", text: "Delivered, but needs correction" },
+                { id: "other", text: "Other (describe below)" }
+            ];
+
+
+            window.availableNewMaterialColors = [
+                "#16a085", "#27ae60", "#2980b9", "#8e44ad", "#2c3e50",
+                "#f39c12", "#d35400", "#c0392b", "#bdc3c7", "#7f8c8d",
+                "#1abc9c", "#e67e22", "#27ae60", "#34495e", "#f1c40f"
+            ];
+            window.usedColorIndex = 0;
+
+            window.localStockDataCache = [];
+            window.localJobOrdersCache = [];
+            window.localPlacedMaterialOrderGroupsCache = []; // For display in the "Placed Material Orders" table
+            window.allMaterialOrderGroupsCache = [];      // For accurate calculation of total delivered stock
+            window.materialsCollection = null;
+            window.jobOrdersCollection = null;
+            window.placedMaterialOrderGroupsCollection = null;
+            window.jobOrderNumbers = [];
+            window.orderTypes = {};
+            window.showingArchivedOrders = false;
+            let placedOrdersUnsubscribe = null;
+
+            const stockOverviewContainer = document.getElementById('stockOverviewContainer');
+            const jobOrderConsumptionTable = document.getElementById('jobOrderConsumptionTable');
+            const placedMaterialOrdersTable = document.getElementById('placedMaterialOrdersTable');
+            const addMaterialBtn = document.getElementById('addMaterialBtn');
+            const checkOutStockBtn = document.getElementById('checkOutStockBtn');
+            const addMaterialOrderBtn = document.getElementById('addMaterialOrderBtn');
+            const toggleArchivedOrdersBtn = document.getElementById('toggleArchivedOrdersBtn');
+            const placedMaterialOrdersTitle = document.getElementById('placedMaterialOrdersTitle');
+            const currentYearSpan = document.getElementById('currentYear');
+            // DEBUG: DOM elements queried in onload.
+
+            if (currentYearSpan) currentYearSpan.textContent = new Date().getFullYear();
+
+            // --- Function Definitions ---
+
+            function getMaterialBaseType(materialNameInput) {
+                const materialName = String(materialNameInput || '').trim().toUpperCase();
+                if (!materialName) return "DEFAULT";
+                const sortedKeys = Object.keys(window.materialTypeColors).sort((a, b) => b.length - a.length);
+                for (const type of sortedKeys) {
+                    if (materialName.startsWith(type)) return type;
+                }
+                return "DEFAULT";
+            }
+
+            function getFullMaterialName(material, includeStyling = false, forSelect = false) {
+                if (!material || typeof material.name === 'undefined' || typeof material.thickness === 'undefined' || typeof material.size === 'undefined') {
+                    return "N/A";
+                }
+                const namePart = String(material.name || '');
+                const detailsPart = `${material.thickness}mm ${material.size}`;
+                const colorTypeUpper = String(material.colorType || '').toUpperCase();
+
+                if (forSelect) {
+                    let selectName = `${namePart} ${detailsPart}`;
+                    if (material.colorType) selectName += ` (${material.colorType})`;
+                    return selectName;
+                }
+
+                if (includeStyling) {
+                    const baseColorToUse = material.baseColor || (window.materialTypeColors[getMaterialBaseType(namePart)] || window.materialTypeColors["DEFAULT"]);
+                    let styledNamePart = `<span class="used-material-name-part" style="background-color: ${baseColorToUse}; color: #ffffff;">${namePart}</span>`;
+                    let styledDetailsPart = ` <span class="used-material-details-part">${detailsPart}</span>`;
+
+                    const definedStyle = window.definedColorTypes[colorTypeUpper];
+                    if (definedStyle) {
+                        if (colorTypeUpper === "WHITE") {
+                             styledDetailsPart += ` <span class="material-color-indicator white" title="White"></span>`;
+                        } else if (definedStyle.styleClass && definedStyle.styleClass !== "white-indicator") {
+                             styledDetailsPart = ` <span class="used-material-details-part ${definedStyle.styleClass}">${detailsPart}</span>`;
+                        }
+                    } else if (material.colorType) {
+                        styledDetailsPart += ` <span style="font-style: italic; color: #cbd5e1;">(${material.colorType})</span>`;
+                    }
+                    return `${styledNamePart}${styledDetailsPart}`;
+                }
+                return `${namePart} ${detailsPart}${material.colorType ? ' (' + material.colorType + ')' : ''}`;
+            }
+
+            function getNextAvailableColor(materialBaseName) {
+                const upperBaseName = materialBaseName.toUpperCase();
+                if (window.materialTypeColors[upperBaseName]) {
+                    return window.materialTypeColors[upperBaseName];
+                }
+                const color = window.availableNewMaterialColors[window.usedColorIndex % window.availableNewMaterialColors.length];
+                window.usedColorIndex++;
+                return color;
+            }
+
+            function showAddMaterialPropertiesModal() {
+                // DEBUG: showAddMaterialPropertiesModal called
+                return new Promise((resolve) => {
+                    const modalBackdrop = document.createElement('div'); modalBackdrop.className = 'modal-backdrop'; document.body.appendChild(modalBackdrop);
+                    const modal = document.createElement('div'); modal.className = 'modal-box';
+                    modal.innerHTML = `
+                        <h3 class="text-xl font-semibold mb-6">Add New Material to Inventory</h3>
+                        <div class="form-group">
+                            <label for="materialDepartment">Department:</label>
+                            <select id="materialDepartment" class="w-full">
+                                <option value="Large Format" selected>Large Format</option>
+                                <option value="Carpentry">Carpentry</option>
+                                <option value="Fabrication">Fabrication</option>
+                                <option value="Uncategorized">Uncategorized</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label for="materialName">Material Name (e.g., Foamex, Corrie):</label><input type="text" id="materialName" placeholder="e.g., Foamex" class="w-full"></div>
+                        <div class="form-group">
+                            <label for="materialThicknessSlider">Thickness (mm):</label>
+                            <div class="slider-container">
+                                <input type="range" id="materialThicknessSlider" value="3" min="1" max="50" step="1" class="w-full">
+                                <span id="materialThicknessValue" class="slider-value">3</span>
+                            </div>
+                        </div>
+                        <div class="form-group"><label for="materialSize">Size (e.g., 8x4, 10x5):</label><input type="text" id="materialSize" placeholder="e.g., 8x4" class="w-full"></div>
+                        <div class="form-group"><label for="materialColorType">Color/Type (e.g., Black, White, Brushed, Gold - optional):</label><input type="text" id="materialColorType" placeholder="e.g., Black" class="w-full"></div>
+                        <div class="form-group">
+                            <label for="initialStockSlider">Initial Stock (sheets):</label>
+                            <div class="slider-container">
+                                <input type="range" id="initialStockSlider" value="0" min="0" max="200" step="1" class="w-full">
+                                <span id="initialStockValue" class="slider-value">0</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="minStockSlider">Minimum Stock (sheets):</label>
+                            <div class="slider-container">
+                                <input type="range" id="minStockSlider" value="0" min="0" max="100" step="1" class="w-full">
+                                <span id="minStockValue" class="slider-value">0</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                            <button id="cancelAddMaterial" class="btn bg-gray-600 hover:bg-gray-700 text-white w-full sm:w-auto">Cancel</button>
+                            <button id="confirmAddMaterial" class="btn btn-primary w-full sm:w-auto">Add Material</button>
+                        </div>`;
+                    document.body.appendChild(modal);
+
+                    document.getElementById('materialThicknessSlider').oninput = function() { document.getElementById('materialThicknessValue').textContent = this.value; };
+                    document.getElementById('initialStockSlider').oninput = function() { document.getElementById('initialStockValue').textContent = this.value; };
+                    document.getElementById('minStockSlider').oninput = function() { document.getElementById('minStockValue').textContent = this.value; };
+
+                    const closeAndResolve = (value) => { document.body.removeChild(modal); document.body.removeChild(modalBackdrop); resolve(value); };
+                    document.getElementById('confirmAddMaterial').onclick = () => {
+                        const department = document.getElementById('materialDepartment').value;
+                        const name = document.getElementById('materialName').value.trim();
+                        const thickness = parseFloat(document.getElementById('materialThicknessSlider').value);
+                        const size = document.getElementById('materialSize').value.trim();
+                        const colorType = document.getElementById('materialColorType').value.trim() || null;
+                        const initialStock = parseInt(document.getElementById('initialStockSlider').value);
+                        const minStock = parseInt(document.getElementById('minStockSlider').value);
+
+                        if (department && name && !isNaN(thickness) && thickness > 0 && size) {
+                            closeAndResolve({ department, name, thickness, size, colorType, initialStock, minStock });
+                        } else {
+                            showMessageBox("Please fill in Department, Material Name, a valid Size, and ensure Thickness is set. Stock levels are set by sliders.");
+                        }
+                    };
+                    document.getElementById('cancelAddMaterial').onclick = () => closeAndResolve(null);
+                    modalBackdrop.onclick = () => closeAndResolve(null);
+                });
+            }
+
+            function showSelectOrCreateJobOrderModal(title = "Select or Create Job Order") {
+                // DEBUG: showSelectOrCreateJobOrderModal called
+                return new Promise((resolve) => {
+                    const modalBackdrop = document.createElement('div'); modalBackdrop.className = 'modal-backdrop'; document.body.appendChild(modalBackdrop);
+                    const modal = document.createElement('div'); modal.className = 'modal-box';
+
+                    modal.innerHTML = `
+                        <h3 class="text-xl font-semibold mb-6">${title}</h3>
+                        <div class="form-group">
+                            <label for="jobOrderNumberCheckout">Job Order Number (e.g., PM12345):</label>
+                            <div class="flex items-center">
+                                <select id="salespersonPrefixCheckout" class="w-1/3 mr-2">
+                                    ${salespeople.map(sp => `<option value="${sp.prefix}" style="color:${sp.prefix ? sp.color : '#e2e8f0'}; background-color: ${ (sp.color === "#FFD700" || sp.color === "#FFBF00" || sp.color === "#C0C0C0") ? '#2d3748' : 'transparent' };" ${sp.prefix === "" ? "disabled selected" : ""}>${sp.prefix || 'Prefix'}</option>`).join('')}
+                                </select>
+                                <input type="text" id="jobOrderNumberInputCheckout" placeholder="12345" class="w-2/3" maxlength="5">
+                            </div>
+                             <datalist id="existingJobOrdersDatalist">
+                                ${window.localJobOrdersCache.map(jo => `<option value="${jo.jobOrderNumber}"></option>`).join('')}
+                            </datalist>
+                            <input type="text" id="jobOrderNumberSearch" placeholder="Search existing or type full J.O. No." class="w-full mt-2" list="existingJobOrdersDatalist">
+                        </div>
+                        <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                            <button id="cancelJobOrderCheckout" class="btn bg-gray-600 hover:bg-gray-700 text-white w-full sm:w-auto">Cancel</button>
+                            <button id="confirmJobOrderCheckout" class="btn btn-secondary w-full sm:w-auto">Next</button>
+                        </div>`;
+                    document.body.appendChild(modal);
+
+                    const jobOrderInput = document.getElementById('jobOrderNumberInputCheckout');
+                    const salespersonSelect = document.getElementById('salespersonPrefixCheckout');
+                    const jobOrderSearch = document.getElementById('jobOrderNumberSearch');
+
+                    const updateJobOrderInputFromSearch = () => {
+                        const searchValue = jobOrderSearch.value.trim().toUpperCase();
+                        const existingJob = window.localJobOrdersCache.find(jo => jo.jobOrderNumber === searchValue);
+                        if (existingJob) {
+                            salespersonSelect.value = existingJob.prefix;
+                            jobOrderInput.value = searchValue.substring(existingJob.prefix.length);
+                        } else {
+                            let matchedPrefix = "";
+                            for(const sp of salespeople){
+                                if(sp.prefix && searchValue.startsWith(sp.prefix)){
+                                    matchedPrefix = sp.prefix;
+                                    break;
+                                }
+                            }
+                            if(matchedPrefix){
+                                salespersonSelect.value = matchedPrefix;
+                                jobOrderInput.value = searchValue.substring(matchedPrefix.length).replace(/\D/g, '').substring(0,5);
+                            } else if (/^\d{1,5}$/.test(searchValue) && !salespersonSelect.value) {
+                                jobOrderInput.value = searchValue.substring(0,5);
+                            } else if (salespersonSelect.value && /^\d*$/.test(searchValue)) {
+                                jobOrderInput.value = searchValue.substring(0,5);
+                            }
+                        }
+                    };
+
+                    jobOrderSearch.addEventListener('input', updateJobOrderInputFromSearch);
+                    jobOrderSearch.addEventListener('change', updateJobOrderInputFromSearch);
+
+
+                    jobOrderInput.addEventListener('input', () => {
+                        let numericValue = jobOrderInput.value.replace(/\D/g, '');
+                        numericValue = numericValue.substring(0, 5);
+                        jobOrderInput.value = numericValue;
+                    });
+
+                    salespersonSelect.onchange = () => {
+                       const currentNumericPart = jobOrderInput.value.replace(/\D/g, '');
+                       if (currentNumericPart.length > 0 && currentNumericPart.length <= 5) {
+                           jobOrderInput.value = currentNumericPart;
+                       } else {
+                           jobOrderInput.value = '';
+                       }
+                    };
+
+                    const closeAndResolve = (value) => { document.body.removeChild(modal); document.body.removeChild(modalBackdrop); resolve(value); };
+                    document.getElementById('confirmJobOrderCheckout').onclick = async () => {
+                        const numericPart = jobOrderInput.value.trim();
+                        const prefix = salespersonSelect.value;
+
+                        if (!prefix) {
+                            showMessageBox("Please select a salesperson prefix.");
+                            return;
+                        }
+                        if (!/^\d{5}$/.test(numericPart)) {
+                            showMessageBox("Job Order number must be 5 digits after the prefix.");
+                            return;
+                        }
+
+                        const jobOrderNumber = prefix + numericPart;
+                        const existingJobOrder = window.localJobOrdersCache.find(jo => jo.jobOrderNumber === jobOrderNumber);
+
+                        if (existingJobOrder) {
+                            console.log("DEBUG: Existing job order selected:", jobOrderNumber, "with prefix:", prefix);
+                            closeAndResolve({ jobOrderNumber, prefix: existingJobOrder.prefix, isNew: false });
+                        } else {
+                            console.log("DEBUG: New job order to be created:", jobOrderNumber, "with prefix:", prefix);
+                            closeAndResolve({ jobOrderNumber, prefix, isNew: true });
+                        }
+                    };
+                    document.getElementById('cancelJobOrderCheckout').onclick = () => closeAndResolve(null);
+                    modalBackdrop.onclick = () => closeAndResolve(null);
+                });
+            }
+
+            // --- POPRAWIONA FUNKCJA MODALNA ---
+            function showMaterialUsageForJobOrderModal(jobOrderDetails) {
+                return new Promise((resolve) => {
+                    const modalBackdrop = document.createElement('div');
+                    modalBackdrop.className = 'modal-backdrop';
+                    document.body.appendChild(modalBackdrop);
+                    
+                    const modal = document.createElement('div');
+                    modal.className = 'modal-box';
+                    modal.style.maxWidth = '700px';
+
+                    modal.innerHTML = `
+                        <h3 class="text-xl font-semibold mb-4">Check Out Stock for Job: <span class="font-bold text-blue-400">${jobOrderDetails.jobOrderNumber}</span></h3>
+                        <div id="materialUsageItemsContainer" class="space-y-4 mb-4 max-h-96 overflow-y-auto pr-2"></div>
+                        <button id="addAnotherMaterialUsageItem" class="btn btn-secondary text-sm py-2 px-3 mb-6 w-full sm:w-auto">Add Another Material</button>
+                        <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                            <button id="cancelMaterialUsage" class="btn bg-gray-600 hover:bg-gray-700 text-white w-full sm:w-auto">Cancel</button>
+                            <button id="confirmAllMaterialUsage" class="btn btn-primary w-full sm:w-auto">Confirm All Usage</button>
+                        </div>`;
+                    document.body.appendChild(modal);
+
+                    const itemsContainer = document.getElementById('materialUsageItemsContainer');
+                    let materialItemCounter = 0;
+
+                    const createMaterialUsageItemHTML = (itemId) => {
+                        let materialOptionsHTML = '<option value="">-- Select Existing Material --</option>';
+                        materialOptionsHTML += `<option value="NEW_MATERIAL_${itemId}">-- Add New Material --</option>`;
+                        if (Array.isArray(window.localStockDataCache)) {
+                            window.localStockDataCache.forEach(mat => {
+                                materialOptionsHTML += `<option value="${mat.id}">${getFullMaterialName(mat, false, true)}</option>`;
+                            });
+                        }
+                        return `
+                            <div class="material-usage-item-entry border border-gray-700 p-3 rounded-md" data-item-id="${itemId}">
+                                <div class="form-group">
+                                    <label for="existingMaterialSelect_${itemId}">Select Material or Add New:</label>
+                                    <select id="existingMaterialSelect_${itemId}" class="material-select w-full">${materialOptionsHTML}</select>
+                                </div>
+                                <div id="newMaterialFieldsContainer_${itemId}" style="display: none; border: 1px solid #4b5563; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                                    <h5 class="text-md font-semibold mb-2">Define New Material:</h5>
+                                    <div class="form-group"><label for="materialDepartmentNew_${itemId}">Department:</label><select id="materialDepartmentNew_${itemId}" class="w-full"><option value="Large Format" selected>Large Format</option><option value="Carpentry">Carpentry</option><option value="Fabrication">Fabrication</option><option value="Uncategorized">Uncategorized</option></select></div>
+                                    <div class="form-group"><label for="materialNameNew_${itemId}">Name:</label><input type="text" id="materialNameNew_${itemId}" class="w-full"></div>
+                                    <div class="form-group">
+                                        <label for="materialThicknessNewSlider_${itemId}">Thickness (mm):</label>
+                                        <div class="slider-container">
+                                            <input type="range" id="materialThicknessNewSlider_${itemId}" value="3" min="1" max="50" step="1" class="w-full">
+                                            <span id="materialThicknessNewValue_${itemId}" class="slider-value">3</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group"><label for="materialSizeNew_${itemId}">Size:</label><input type="text" id="materialSizeNew_${itemId}" class="w-full"></div>
+                                    <div class="form-group"><label for="materialColorTypeNew_${itemId}">Color/Type:</label><input type="text" id="materialColorTypeNew_${itemId}" placeholder="e.g., Black, Brushed" class="w-full"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="quantityToUseSlider_${itemId}">Quantity to Use (sheets):</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="quantityToUseSlider_${itemId}" value="1" min="1" max="50" step="1" class="w-full">
+                                        <span id="quantityToUseValue_${itemId}" class="slider-value">1</span>
+                                    </div>
+                                </div>
+                                <div class="form-group flex items-center">
+                                    <input type="checkbox" id="flagIssueCheckbox_${itemId}" class="mr-2">
+                                    <label for="flagIssueCheckbox_${itemId}" class="mb-0 text-sm">Flag Issue/Snag for this material usage</label>
+                                </div>
+                                <button class="btn-delete remove-material-usage-item-btn text-xs py-1 px-2 w-full sm:w-auto">Remove This Material</button>
+                            </div>`;
+                    };
+
+                    const addMaterialUsageItem = () => {
+                        materialItemCounter++;
+                        const itemDiv = document.createElement('div');
+                        itemDiv.innerHTML = createMaterialUsageItemHTML(materialItemCounter);
+                        const firstChild = itemsContainer.firstChild;
+                        itemsContainer.insertBefore(itemDiv, firstChild);
+
+
+                        const currentItemId = materialItemCounter;
+                        document.getElementById(`quantityToUseSlider_${currentItemId}`).oninput = function() { document.getElementById(`quantityToUseValue_${currentItemId}`).textContent = this.value; };
+                        const newThicknessSlider = document.getElementById(`materialThicknessNewSlider_${currentItemId}`);
+                        if (newThicknessSlider) {
+                            newThicknessSlider.oninput = function() { document.getElementById(`materialThicknessNewValue_${currentItemId}`).textContent = this.value; };
+                        }
+
+                        const selectEl = document.getElementById(`existingMaterialSelect_${currentItemId}`);
+                        const newFieldsEl = document.getElementById(`newMaterialFieldsContainer_${currentItemId}`);
+                        
+                        if(selectEl && newFieldsEl) {
+                             selectEl.onchange = () => {
+                                newFieldsEl.style.display = selectEl.value === `NEW_MATERIAL_${currentItemId}` ? 'block' : 'none';
+                            };
+                        }
+                       
+                        const removeButton = itemDiv.querySelector('.remove-material-usage-item-btn');
+                        if(removeButton){
+                             removeButton.onclick = () => {
+                                itemDiv.remove();
+                            };
+                        }
+                    };
+                    
+                    addMaterialUsageItem(); // Add the first item
+                    
+                    document.getElementById('addAnotherMaterialUsageItem').onclick = addMaterialUsageItem;
+                    
+                    const closeAndResolve = (value) => {
+                        document.body.removeChild(modal);
+                        document.body.removeChild(modalBackdrop);
+                        resolve(value);
+                    };
+
+                    document.getElementById('confirmAllMaterialUsage').onclick = async () => {
+                         const allUsageDetails = [];
+                        const itemElements = itemsContainer.querySelectorAll('.material-usage-item-entry');
+                        if (itemElements.length === 0) { showMessageBox("Please add at least one material to check out."); return; }
+
+                        for (const itemEl of itemElements) {
+                            const itemId = itemEl.dataset.itemId;
+                            const quantityToUse = parseInt(document.getElementById(`quantityToUseSlider_${itemId}`).value);
+                            const hasIssue = document.getElementById(`flagIssueCheckbox_${itemId}`).checked;
+
+                            if (isNaN(quantityToUse) || quantityToUse <= 0) { showMessageBox(`Please enter a valid quantity for all material items (must be > 0).`); return; }
+
+                            let materialId;
+                            let materialDataForUpdate;
+                            const existingMaterialSelect = document.getElementById(`existingMaterialSelect_${itemId}`);
+
+                            if (existingMaterialSelect.value === `NEW_MATERIAL_${itemId}`) {
+                                const department = document.getElementById(`materialDepartmentNew_${itemId}`).value;
+                                const name = document.getElementById(`materialNameNew_${itemId}`).value.trim();
+                                const thickness = parseFloat(document.getElementById(`materialThicknessNewSlider_${itemId}`).value);
+                                const size = document.getElementById(`materialSizeNew_${itemId}`).value.trim();
+                                const colorType = document.getElementById(`materialColorTypeNew_${itemId}`).value.trim() || null;
+
+                                if (!department || !name || isNaN(thickness) || thickness <= 0 || !size) { showMessageBox(`Please fill all new material details correctly for item ${itemId}.`); return; }
+
+                                const materialBaseName = String(name || '').toUpperCase();
+                                let baseColor = window.materialTypeColors[getMaterialBaseType(name)] || getNextAvailableColor(materialBaseName);
+
+                                materialDataForUpdate = { department, name, thickness, size, colorType, baseColor, initialStock: 0, minStock: 0, orders: {} };
+                                try {
+                                    const docRef = await window.fb.addDoc(window.materialsCollection, materialDataForUpdate);
+                                    materialId = docRef.id;
+                                    materialDataForUpdate.id = materialId;
+                                } catch (error) { console.error("DEBUG: Error adding new material during multi-checkout:", error); showMessageBox("Failed to add new material."); return; }
+                            } else if (existingMaterialSelect.value) {
+                                materialId = existingMaterialSelect.value;
+                                materialDataForUpdate = window.localStockDataCache.find(m => m.id === materialId);
+                                if (!materialDataForUpdate) { showMessageBox(`Selected material for item ${itemId} not found.`); return; }
+                            } else {
+                                showMessageBox(`Please select a material or define a new one for item ${itemId}.`); return;
+                            }
+                            allUsageDetails.push({ materialId, materialData: materialDataForUpdate, quantityToUse, hasIssue });
+                        }
+                        closeAndResolve({ usageArray: allUsageDetails, jobOrderDetails });
+                    };
+                    document.getElementById('cancelMaterialUsage').onclick = () => closeAndResolve(null);
+                    modalBackdrop.onclick = () => closeAndResolve(null);
+                });
+            }
+
+            function showInputModal(message, placeholder = '', inputType = 'text', initialValue = '') {
+                // DEBUG: showInputModal called with message: message
+                return new Promise((resolve) => {
+                    const modalBackdrop = document.createElement('div'); modalBackdrop.className = 'modal-backdrop'; document.body.appendChild(modalBackdrop);
+                    const modal = document.createElement('div'); modal.className = 'modal-box';
+                    modal.innerHTML = `
+                        <h3 class="text-lg font-medium mb-4">${message}</h3><input type="${inputType}" id="modalInput" placeholder="${placeholder}" value="${initialValue}" class="w-full mb-4">
+                        <div class="flex flex-col sm:flex-row justify-end gap-3"><button id="cancelModalInput" class="btn bg-gray-600 hover:bg-gray-700 text-white w-full sm:w-auto">Cancel</button><button id="confirmModalInput" class="btn btn-primary w-full sm:w-auto">OK</button></div>`;
+                    document.body.appendChild(modal); document.getElementById('modalInput').focus();
+                    const closeAndResolve = (value) => { document.body.removeChild(modal); document.body.removeChild(modalBackdrop); resolve(value); };
+                    document.getElementById('confirmModalInput').onclick = () => { const val = document.getElementById('modalInput').value; if (inputType === 'number') closeAndResolve(parseFloat(val)); else closeAndResolve(val.trim()); };
+                    document.getElementById('cancelModalInput').onclick = () => closeAndResolve(null);
+                    modalBackdrop.onclick = () => closeAndResolve(null);
+                    document.getElementById('modalInput').onkeypress = (e) => { if (e.key === 'Enter') document.getElementById('confirmModalInput').click(); };
+                });
+            }
+
+            function showMessageBox(message, onConfirm = null) {
+                // DEBUG: showMessageBox: message
+                const modalBackdrop = document.createElement('div'); modalBackdrop.className = 'modal-backdrop'; document.body.appendChild(modalBackdrop);
+                const modal = document.createElement('div'); modal.className = 'modal-box';
+                modal.innerHTML = `<p class="text-lg mb-6">${message}</p><div class="flex justify-end"><button id="okModalMessage" class="btn btn-primary w-full sm:w-auto">OK</button></div>`;
+                document.body.appendChild(modal); const close = () => { document.body.removeChild(modal); document.body.removeChild(modalBackdrop); if (onConfirm) onConfirm(); };
+                document.getElementById('okModalMessage').onclick = close; modalBackdrop.onclick = close;
+            }
+
+            function showConfirmModal(message) {
+                // DEBUG: showConfirmModal called with message: message
+                return new Promise((resolve) => {
+                    const modalBackdrop = document.createElement('div'); modalBackdrop.className = 'modal-backdrop'; document.body.appendChild(modalBackdrop);
+                    const modal = document.createElement('div'); modal.className = 'modal-box';
+                    modal.innerHTML = `<p class="text-lg mb-6">${message}</p><div class="flex flex-col sm:flex-row justify-end gap-3"><button id="cancelConfirm" class="btn bg-gray-600 hover:bg-gray-700 text-white w-full sm:w-auto">Cancel</button><button id="okConfirm" class="btn btn-delete w-full sm:w-auto">Confirm</button></div>`;
+                    document.body.appendChild(modal); const closeAndResolve = (value) => { document.body.removeChild(modal); document.body.removeChild(modalBackdrop); resolve(value); };
+                    document.getElementById('okConfirm').onclick = () => closeAndResolve(true); document.getElementById('cancelConfirm').onclick = () => closeAndResolve(false); modalBackdrop.onclick = () => closeAndResolve(false);
+                });
+            }
+            function showSliderModal(message, initialValue, min = 0, max = 100, step = 1) {
+                 // DEBUG: showSliderModal called
+                return new Promise((resolve) => {
+                    const modalBackdrop = document.createElement('div'); modalBackdrop.className = 'modal-backdrop'; document.body.appendChild(modalBackdrop);
+                    const modal = document.createElement('div'); modal.className = 'modal-box';
+                    modal.innerHTML = `
+                        <h3 class="text-lg font-medium mb-2">${message}</h3>
+                        <div class="slider-container mb-4">
+                            <input type="range" id="modalSlider" min="${min}" max="${max}" value="${initialValue}" step="${step}" class="flex-grow">
+                            <span id="sliderValueDisplay" class="slider-value">${initialValue}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row justify-end gap-3">
+                            <button id="cancelSlider" class="btn bg-gray-600 hover:bg-gray-700 text-white w-full sm:w-auto">Cancel</button>
+                            <button id="confirmSlider" class="btn btn-primary w-full sm:w-auto">OK</button>
+                        </div>`;
+                    document.body.appendChild(modal);
+                    const slider = document.getElementById('modalSlider'); const display = document.getElementById('sliderValueDisplay');
+                    slider.oninput = () => display.textContent = slider.value;
+                    const closeAndResolve = (value) => { document.body.removeChild(modal); document.body.removeChild(modalBackdrop); resolve(value); };
+                    document.getElementById('confirmSlider').onclick = () => closeAndResolve(parseInt(slider.value));
+                    document.getElementById('cancelSlider').onclick = () => closeAndResolve(null); modalBackdrop.onclick = () => closeAndResolve(null);
+                });
+            }
+            
+            // --- ZAKTUALIZOWANY MODAL ZAMÓWIENIA ---
+            function showPlaceNewMaterialOrderModal() {
+                return new Promise((resolve) => {
+                    const modalBackdrop = document.createElement('div'); modalBackdrop.className = 'modal-backdrop'; document.body.appendChild(modalBackdrop);
+                    const modal = document.createElement('div'); modal.className = 'modal-box'; modal.style.maxWidth = '600px';
+
+                    let materialOptionsHTML = '';
+                    if (Array.isArray(window.localStockDataCache)) {
+                        window.localStockDataCache.forEach(mat => {
+                            const displayName = getFullMaterialName(mat, false, true);
+                            materialOptionsHTML += `<option value="${mat.id}">${displayName}</option>`;
+                        });
+                    }
+                    modal.innerHTML = `
+                        <h3 class="text-xl font-semibold mb-6">Place New Material Order</h3>
+                        <div id="materialOrderItemsContainer"></div>
+                        <button id="addAnotherMaterialToOrder" class="btn btn-secondary mt-4 mb-2 text-sm py-2 px-3 w-full sm:w-auto">Add Another Material</button>
+                        <div class="form-group mt-4"><label for="orderedBy">Ordered By:</label><input type="text" id="orderedBy" placeholder="e.g., Alex L." class="w-full"></div>
+                        <div class="form-group"><label for="jobDocketNumber">Job Docket Number (Optional):</label><input type="text" id="jobDocketNumber" placeholder="e.g., PM12345" class="w-full"></div>
+                        <div class="form-group"><label for="orderNote">Note (Optional):</label><input type="text" id="orderNote" placeholder="e.g., For project X" class="w-full"></div>
+                        <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                            <button id="cancelMaterialOrder" class="btn bg-gray-600 hover:bg-gray-700 text-white w-full sm:w-auto">Cancel</button>
+                            <button id="confirmMaterialOrder" class="btn btn-tertiary w-full sm:w-auto">Place Order</button>
+                        </div>`;
+                    document.body.appendChild(modal);
+                    const itemsContainer = document.getElementById('materialOrderItemsContainer');
+
+                    const addOrderItemElement = () => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'material-order-item p-3 border border-gray-700 rounded-md mb-3';
+                        itemDiv.innerHTML = `
+                            <div class="form-group">
+                                <label>Material:</label>
+                                <select class="material-select w-full">
+                                    <option value="" disabled selected>Select Material</option>
+                                    ${materialOptionsHTML}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Quantity (sheets):</label>
+                                <div class="slider-container">
+                                    <input type="range" class="quantity-slider flex-grow" min="1" max="100" value="10" step="1">
+                                    <span class="slider-value text-lg font-semibold ml-2 sm:ml-4">10</span>
+                                </div>
+                            </div>
+                            <button class="btn-delete remove-order-item-btn text-xs py-1 px-2 mt-1 w-full sm:w-auto">Remove</button>`;
+                        itemsContainer.appendChild(itemDiv);
+                        itemDiv.querySelector('.quantity-slider').oninput = function() { this.nextElementSibling.textContent = this.value; };
+                        itemDiv.querySelector('.remove-order-item-btn').onclick = function() {
+                            itemDiv.remove();
+                            document.getElementById('confirmMaterialOrder').disabled = itemsContainer.children.length === 0;
+                        };
+                        document.getElementById('confirmMaterialOrder').disabled = false;
+                    };
+
+                    addOrderItemElement();
+                    document.getElementById('addAnotherMaterialToOrder').onclick = addOrderItemElement;
+
+                    const closeAndResolve = (value) => { document.body.removeChild(modal); document.body.removeChild(modalBackdrop); resolve(value); };
+                    document.getElementById('confirmMaterialOrder').onclick = () => {
+                        const orderedBy = document.getElementById('orderedBy').value.trim();
+                        const jobDocketNumber = document.getElementById('jobDocketNumber').value.trim() || null;
+                        const orderNote = document.getElementById('orderNote').value.trim() || null;
+
+                        if (!orderedBy) { showMessageBox("Please enter who is placing the order."); return; }
+
+                        const items = [];
+                        const itemElements = itemsContainer.querySelectorAll('.material-order-item');
+                        if (itemElements.length === 0) { showMessageBox("Please add at least one material to the order."); return; }
+
+                        let allMaterialsSelected = true;
+                        itemElements.forEach(itemEl => {
+                            const materialId = itemEl.querySelector('.material-select').value;
+                            const quantity = parseInt(itemEl.querySelector('.quantity-slider').value);
+                            if (!materialId) allMaterialsSelected = false;
+                            if (materialId && quantity > 0) {
+                                const material = window.localStockDataCache.find(m => m.id === materialId);
+                                if (material) items.push({ materialId: materialId, materialFullName: getFullMaterialName(material, true), quantity: quantity });
+                            }
+                        });
+
+                        if (!allMaterialsSelected) { showMessageBox("Please select a material for all items in the order."); return; }
+                        if (items.length === 0) { showMessageBox("No valid items in order. Ensure quantity > 0 and material selected."); return; }
+
+                        closeAndResolve({ items, orderedBy, jobDocketNumber: jobDocketNumber, note: orderNote, orderPlaced: false, delivered: false, isArchived: false, createdAt: window.fb.serverTimestamp() });
+                    };
+                    document.getElementById('cancelMaterialOrder').onclick = () => closeAndResolve(null);
+                    modalBackdrop.onclick = () => closeAndResolve(null);
+                });
+            }
+
+           function calculateTotalUsedInJobs(material) {
+                let totalUsed = 0;
+                if (material && material.orders && typeof material.orders === 'object') {
+                    for (const jobOrderNumber in material.orders) {
+                        if (material.orders.hasOwnProperty(jobOrderNumber)) {
+                            const jobOrderInfo = window.localJobOrdersCache.find(jo => jo.jobOrderNumber === jobOrderNumber);
+                            if (jobOrderInfo && String(jobOrderInfo.type || 'out').toLowerCase() === 'out') {
+                                const orderData = material.orders[jobOrderNumber];
+                                let quantityForThisOrder = 0;
+
+                                if (typeof orderData === 'number') {
+                                    quantityForThisOrder = orderData;
+                                } else if (typeof orderData === 'object' && orderData !== null && orderData.hasOwnProperty('quantity')) {
+                                    const parsedQuantity = Number(orderData.quantity);
+                                    if (!isNaN(parsedQuantity)) {
+                                        quantityForThisOrder = parsedQuantity;
+                                    } else {
+                                        console.warn(`Material ${material.id || 'N/A'}, Job ${jobOrderNumber}: 'quantity' field in order object is not a number or missing. Data:`, orderData);
+                                    }
+                                } else if (orderData !== null && orderData !== undefined) {
+                                    console.warn(`Material ${material.id || 'N/A'}, Job ${jobOrderNumber}: Unexpected data structure in orders map. Data:`, orderData);
+                                }
+                                totalUsed += quantityForThisOrder;
+                            }
+                        }
+                    }
+                }
+                if (isNaN(totalUsed)) {
+                    console.error(`Material ${material.id || 'N/A'}: calculateTotalUsedInJobs resulted in NaN. Orders:`, material.orders);
+                    return 0;
+                }
+                return totalUsed;
+            }
+
+
+            function calculateTotalDeliveredForMaterial(targetMaterialId) {
+                let totalDelivered = 0;
+                // Use the comprehensive cache that contains ALL orders, regardless of archive status
+                if (Array.isArray(window.allMaterialOrderGroupsCache)) {
+                    window.allMaterialOrderGroupsCache.forEach(group => {
+                        // Only count if the group itself was marked as delivered
+                        if (group.delivered && Array.isArray(group.items)) {
+                            group.items.forEach(item => {
+                                if (item.materialId === targetMaterialId) {
+                                    totalDelivered += Number(item.quantity || 0);
+                                }
+                            });
+                        }
+                    });
+                }
+                return totalDelivered;
+            }
+
+            function calculateAndUpdateTotalStock(material) {
+                if (!material || !material.id) {
+                    return 0;
+                }
+                const initialStock = Number(material.initialStock || 0);
+                const totalUsed = calculateTotalUsedInJobs(material);
+                const totalDelivered = calculateTotalDeliveredForMaterial(material.id);
+                const currentTotalStock = initialStock - totalUsed + totalDelivered;
+
+                if (isNaN(currentTotalStock)) {
+                    console.error(`Material ${material.id}: calculateAndUpdateTotalStock resulted in NaN. Initial: ${initialStock}, Used: ${totalUsed}, Delivered: ${totalDelivered}`);
+                    return 0;
+                }
+                return currentTotalStock;
+            }
+
+            // --- ZMODYFIKOWANA FUNKCJA RENDEROWANIA TABELI ---
+            function renderStockOverviewTable() {
+                if (!stockOverviewContainer || !Array.isArray(window.localStockDataCache)) {
+                    if(stockOverviewContainer) stockOverviewContainer.innerHTML = '<p class="text-center text-gray-400">Loading stock data or no materials defined...</p>';
+                    return;
+                }
+                stockOverviewContainer.innerHTML = '';
+
+                const departments = ["Large Format", "Carpentry", "Fabrication", "Uncategorized"];
+                const materialsByDepartment = { "Large Format": [], "Carpentry": [], "Fabrication": [], "Uncategorized": [] };
+
+                window.localStockDataCache.forEach(material => {
+                    const dept = material.department && departments.includes(material.department) ? material.department : "Uncategorized";
+                    materialsByDepartment[dept].push(material);
+                });
+
+                departments.forEach(deptName => {
+                    const materialsInDept = materialsByDepartment[deptName];
+                    if (materialsInDept.length === 0 && (deptName !== "Uncategorized" || !window.localStockDataCache.some(m => !m.department || !departments.includes(m.department)))) {
+                        return;
+                    }
+
+                    const deptSection = document.createElement('div'); deptSection.className = 'department-section';
+                    deptSection.innerHTML = `<h3 class="department-title">${deptName}</h3>`;
+                    const tableContainerEl = document.createElement('div'); tableContainerEl.className = 'table-container';
+                    const table = document.createElement('table'); table.className = 'w-full border-collapse stock-overview-dept-table';
+                    // Zaktualizowany nagłówek tabeli
+                    table.innerHTML = `<thead><tr><th class="rounded-tl-lg">Material</th><th>Initial Stock</th><th>Current Stock</th><th>Min. Stock</th><th class="rounded-tr-lg">Actions</th></tr></thead><tbody></tbody>`;
+                    tableContainerEl.appendChild(table);
+                    deptSection.appendChild(tableContainerEl);
+
+                    const legendDiv = document.createElement('div');
+                    legendDiv.className = 'color-legend';
+                    const legendTitle = document.createElement('h4');
+                    legendTitle.textContent = 'Material Finish Legend:';
+                    legendTitle.className = 'text-sm font-semibold text-gray-300 w-full mb-2';
+                    legendDiv.appendChild(legendTitle);
+
+                    const legendItemsToShow = ["BLACK", "BRUSHED", "GOLD"];
+                    legendItemsToShow.forEach(key => {
+                        const value = window.definedColorTypes[key];
+                        if (value && value.styleClass !== "white-indicator") {
+                            const legendItem = document.createElement('span');
+                            legendItem.className = 'legend-item';
+                            legendItem.innerHTML = `<span class="legend-color-swatch ${value.styleClass}">${value.name.replace(' Finish','').replace('/Silver','')}</span>`;
+                            legendDiv.appendChild(legendItem);
+                        }
+                    });
+                    deptSection.appendChild(legendDiv);
+
+                    stockOverviewContainer.appendChild(deptSection);
+
+                    const tbody = table.tBodies[0];
+                    if (materialsInDept.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-gray-400">No materials in this department.</td></tr>`;
+                        return;
+                    }
+                    
+                    // Zaktualizowana logika generowania wierszy
+                    materialsInDept.forEach(material => {
+                        const totalStock = calculateAndUpdateTotalStock(material);
+                        const row = tbody.insertRow();
+                        
+                        // Komórka: Materiał
+                        row.insertCell().innerHTML = getFullMaterialName(material, true);
+                        
+                        // Komórka: Stan początkowy
+                        row.insertCell().textContent = material.initialStock || 0;
+                        row.cells[1].className = 'text-center';
+
+                        // Komórka: Aktualny stan (pasek postępu)
+                        const totalStockCell = row.insertCell();
+                        const minStock = material.minStock || 0;
+                        const maxProgress = (minStock > 0) ? (minStock * 5) : Math.max(material.initialStock, 50);
+                        const progressPercentage = maxProgress > 0 ? Math.min((totalStock / maxProgress) * 100, 100) : 0;
+
+                        let progressBarColor;
+                        if (totalStock <= 0) {
+                            progressBarColor = '#dc2626'; // Czerwony
+                        } else if (totalStock < minStock && minStock > 0) {
+                            progressBarColor = '#f59e0b'; // Żółty
+                        } else {
+                            progressBarColor = '#00D084'; // Zielony
+                        }
+                        
+                        totalStockCell.innerHTML = `
+                            <div class="progress-bar-container" title="Stock: ${totalStock} / Max: ${maxProgress}">
+                                <div class="progress-bar-fill" style="width: ${progressPercentage}%; background-color: ${progressBarColor};"></div>
+                                <span class="progress-bar-text">${totalStock}</span>
+                            </div>
+                        `;
+
+                        // Komórka: Stan minimalny
+                        const minStockCell = row.insertCell();
+                        minStockCell.textContent = minStock;
+                        minStockCell.className = 'text-center';
+                        minStockCell.dataset.materialId = material.id;
+                        minStockCell.dataset.fieldName = 'minStock';
+                        minStockCell.dataset.currentValue = minStock;
+                        minStockCell.title = "Double click to edit minimum stock";
+
+                        // Komórka: Akcje
+                        const actionsCell = row.insertCell();
+                        actionsCell.className = 'text-center whitespace-nowrap';
+                        
+                        const adjustBtn = document.createElement('button');
+                        adjustBtn.className = 'btn btn-adjust';
+                        adjustBtn.textContent = 'Adjust';
+                        adjustBtn.onclick = () => adjustStockForMaterial(material.id, getFullMaterialName(material, false));
+                        actionsCell.appendChild(adjustBtn);
+                        
+                        const editBtn = document.createElement('button');
+                        editBtn.className = 'btn btn-edit';
+                        editBtn.textContent = 'Edit Min.';
+                        editBtn.onclick = () => editMinStockForMaterial(material.id, getFullMaterialName(material, false));
+                        actionsCell.appendChild(editBtn);
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'btn btn-delete ml-2';
+                        deleteBtn.textContent = 'Delete';
+                        deleteBtn.onclick = () => deleteMaterialDefinition(material.id, getFullMaterialName(material, false));
+                        actionsCell.appendChild(deleteBtn);
+                    });
+                });
+            }
+
+
+            function renderJobOrderConsumptionTable() {
+                // DEBUG: renderJobOrderConsumptionTable START
+                if (!jobOrderConsumptionTable || !Array.isArray(window.localJobOrdersCache)) { return; }
+                const thead = jobOrderConsumptionTable.tHead || jobOrderConsumptionTable.createTHead();
+                const tbody = jobOrderConsumptionTable.tBodies[0] || jobOrderConsumptionTable.createTBody();
+                thead.innerHTML = ''; tbody.innerHTML = '';
+
+                if (window.localJobOrdersCache.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4">No job orders added yet.</td></tr>`; // Updated colspan to 4
+                    return;
+                }
+
+                const headerRow = thead.insertRow();
+                let thJobOrder = document.createElement('th');
+                thJobOrder.textContent = 'Job Order #';
+                thJobOrder.className = 'rounded-tl-lg';
+                headerRow.appendChild(thJobOrder);
+
+                let thMaterials = document.createElement('th');
+                thMaterials.textContent = 'Materials Used';
+                headerRow.appendChild(thMaterials);
+
+                let thIssue = document.createElement('th');
+                thIssue.textContent = 'Issue/Snag';
+                thIssue.className = 'w-24 text-center';
+                headerRow.appendChild(thIssue);
+
+                let thCost = document.createElement('th');
+                thCost.textContent = 'Total Material Cost (€)';
+                thCost.className = 'rounded-tr-lg text-center';
+                headerRow.appendChild(thCost);
+
+
+                window.localJobOrdersCache.forEach(jobOrder => {
+                    if (!jobOrder || !jobOrder.jobOrderNumber) return;
+                    const row = tbody.insertRow();
+
+                    const cellJobOrder = row.insertCell();
+                    const salesRep = salespeople.find(sp => sp.prefix === jobOrder.prefix);
+                    const salesRepColor = salesRep ? salesRep.color : '#7f8c8d';
+                    const jobOrderPrefix = String(jobOrder.prefix || '');
+                    const jobOrderNumberWithoutPrefix = String(jobOrder.jobOrderNumber || '').substring(jobOrderPrefix.length);
+                    cellJobOrder.innerHTML = `<span class="sales-rep-prefix" style="background-color: ${salesRepColor};">${jobOrderPrefix}</span>${jobOrderNumberWithoutPrefix} <button class="btn-delete-job-order" title="Delete Job Order ${jobOrder.jobOrderNumber}" data-job-order-number="${jobOrder.jobOrderNumber}">&times;</button>`;
+
+                    const cellUsedMaterials = row.insertCell();
+                    cellUsedMaterials.className = "align-top";
+                    let usedMaterialsHTML = '<div class="flex flex-wrap gap-1">';
+                    let jobOrderHasAnyIssue = false;
+                    let currentJobOrderTotalCost = 0;
+
+
+                    if (window.localStockDataCache && window.localStockDataCache.length > 0) {
+                        window.localStockDataCache.forEach(material => {
+                            const orderData = material.orders && material.orders[jobOrder.jobOrderNumber];
+                            let consumedQuantity = 0;
+                            let materialHasIssue = false;
+
+                            if (typeof orderData === 'number') {
+                                consumedQuantity = Number(orderData || 0);
+                            } else if (typeof orderData === 'object' && orderData !== null && orderData.hasOwnProperty('quantity')) {
+                                consumedQuantity = Number(orderData.quantity || 0);
+                                if (orderData.hasIssue) {
+                                    materialHasIssue = true;
+                                    jobOrderHasAnyIssue = true;
+                                }
+                            }
+
+                            if (consumedQuantity > 0) {
+                                currentJobOrderTotalCost += consumedQuantity * 1; // Assuming 1 EUR per sheet
+                                usedMaterialsHTML += `
+                                    <span class="used-material-item" data-material-id="${material.id}" data-job-order-number="${jobOrder.jobOrderNumber}" data-current-value="${consumedQuantity}" title="Double click to edit consumption for ${getFullMaterialName(material, false)}">
+                                        ${getFullMaterialName(material, true)}
+                                        (<span class="used-material-quantity">${consumedQuantity}</span>)
+                                        ${materialHasIssue ? '<span class="text-red-400 ml-1" title="Issue reported for this material">🚩</span>' : ''}
+                                    </span>`;
+                            }
+                        });
+                    }
+                    usedMaterialsHTML += '</div>';
+                    cellUsedMaterials.innerHTML = usedMaterialsHTML.includes('used-material-item') ? usedMaterialsHTML : '<span class="text-gray-400">No materials consumed</span>';
+
+                    const cellIssueIcon = row.insertCell();
+                    cellIssueIcon.className = 'text-center align-middle';
+                    if (jobOrderHasAnyIssue) {
+                        cellIssueIcon.innerHTML = `<span class="job-order-issue-icon" data-job-order-number="${jobOrder.jobOrderNumber}" title="Manage Issue Notes">⚠️</span>`;
+                    } else {
+                        cellIssueIcon.innerHTML = '';
+                    }
+
+                    const cellTotalCost = row.insertCell();
+                    cellTotalCost.textContent = `${currentJobOrderTotalCost.toFixed(2)} €`;
+                    cellTotalCost.className = 'text-red-500 text-center font-semibold align-middle';
+                });
+
+                tbody.querySelectorAll('.btn-delete-job-order').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const jobOrderNumberToDelete = event.target.dataset.jobOrderNumber;
+                        if (jobOrderNumberToDelete) deleteJobOrder(jobOrderNumberToDelete);
+                    });
+                });
+                // DEBUG: renderJobOrderConsumptionTable END
+            }
+
+            async function handleIssueDataSave(jobOrderNumber, materialId, selectedIssueType, issueDescription) {
+                if (!jobOrderNumber || !materialId) {
+                    console.error("DEBUG: Missing jobOrderNumber or materialId for saving issue data.");
+                    return false;
+                }
+                if (!window.fb || !window.db || !window.materialsCollection) {
+                    showMessageBox("Database connection not ready to save issue data.");
+                    return false;
+                }
+
+                const materialRef = window.fb.doc(window.materialsCollection, materialId);
+                try {
+                    await window.fb.runTransaction(db, async (transaction) => {
+                        const materialDoc = await transaction.get(materialRef);
+                        if (!materialDoc.exists()) {
+                            throw `Material document with ID ${materialId} does not exist!`;
+                        }
+                        const materialData = materialDoc.data();
+                        const currentOrders = materialData.orders || {};
+                        const jobOrderData = currentOrders[jobOrderNumber];
+
+                        let newOrderDataObject = {};
+                        if (typeof jobOrderData === 'object' && jobOrderData !== null) {
+                            newOrderDataObject = { ...jobOrderData };
+                        } else if (typeof jobOrderData === 'number') {
+                             newOrderDataObject.quantity = jobOrderData;
+                        } else {
+                            newOrderDataObject.quantity = 0;
+                        }
+
+                        newOrderDataObject.issueType = selectedIssueType;
+                        newOrderDataObject.issueDescription = issueDescription;
+                        newOrderDataObject.hasIssue = (selectedIssueType !== "no_issue" && selectedIssueType !== "" && selectedIssueType !== null);
+
+                        currentOrders[jobOrderNumber] = newOrderDataObject;
+                        transaction.update(materialRef, { orders: currentOrders });
+                    });
+                    return true;
+                } catch (error) {
+                    console.error("DEBUG: Error updating issue data via transaction:", error);
+                    showMessageBox("Failed to save issue data. Check console.");
+                    return false;
+                }
+            }
+
+            function showJobOrderIssueModal(jobOrderNumber) {
+                // DEBUG: showJobOrderIssueModal for jobOrderNumber
+                const materialsWithIssuesForThisJO = [];
+                window.localStockDataCache.forEach(material => {
+                    const orderData = material.orders && material.orders[jobOrderNumber];
+                    if (typeof orderData === 'object' && orderData !== null && orderData.hasIssue === true) {
+                        materialsWithIssuesForThisJO.push({
+                            materialId: material.id,
+                            materialName: getFullMaterialName(material, false, true),
+                            currentIssueType: orderData.issueType || 'no_issue',
+                            currentIssueDescription: orderData.issueDescription || ''
+                        });
+                    }
+                });
+
+                if (materialsWithIssuesForThisJO.length === 0) {
+                    showMessageBox("No materials currently flagged with issues for this job order. You can flag them during 'Check Out Stock'.");
+                    return;
+                }
+
+                return new Promise((resolve) => {
+                    const modalBackdrop = document.createElement('div'); modalBackdrop.className = 'modal-backdrop'; document.body.appendChild(modalBackdrop);
+                    const modal = document.createElement('div'); modal.className = 'modal-box'; modal.style.maxWidth = '600px'; // Ensure modal is not too wide
+
+                    let issueTypeOptionsHTML = window.definedIssueTypes.map(type =>
+                        `<option value="${type.id}">${type.text}</option>`
+                    ).join('');
+
+                    let itemsHTML = '';
+                    materialsWithIssuesForThisJO.forEach(item => {
+                        itemsHTML += `
+                            <div class="form-group issue-item-entry border-t border-gray-600 pt-4 mt-3 first:mt-0 first:border-t-0 first:pt-0" data-material-id="${item.materialId}">
+                                <label class="font-semibold text-blue-300">${item.materialName}:</label>
+                                <label for="issueTypeSelect_${item.materialId}_${jobOrderNumber}" class="text-sm block mb-1 mt-1">Issue Type:</label>
+                                <select id="issueTypeSelect_${item.materialId}_${jobOrderNumber}" class="issue-type-select w-full">
+                                    ${issueTypeOptionsHTML}
+                                </select>
+                                <label for="issueDesc_${item.materialId}_${jobOrderNumber}" class="text-sm block mb-1 mt-2">Optional Description:</label>
+                                <textarea id="issueDesc_${item.materialId}_${jobOrderNumber}" class="w-full job-order-issue-input" rows="2" placeholder="Describe the issue...">${item.currentIssueDescription}</textarea>
+                            </div>
+                        `;
+                    });
+
+                    modal.innerHTML = `
+                        <h3 class="text-xl font-semibold mb-4">Manage Issue Notes for Job: <span class="font-bold text-blue-400">${jobOrderNumber}</span></h3>
+                        <div id="issueNoteItemsContainer" class="space-y-3 mb-4 max-h-96 overflow-y-auto pr-2">
+                            ${itemsHTML}
+                        </div>
+                        <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                            <button id="cancelIssueNotesModal" class="btn bg-gray-600 hover:bg-gray-700 text-white w-full sm:w-auto">Cancel</button>
+                            <button id="saveAllIssueNotesModal" class="btn btn-primary w-full sm:w-auto">Save All Notes</button>
+                        </div>`;
+                    document.body.appendChild(modal);
+
+                    materialsWithIssuesForThisJO.forEach(item => {
+                        const selectEl = document.getElementById(`issueTypeSelect_${item.materialId}_${jobOrderNumber}`);
+                        if (selectEl) {
+                            selectEl.value = item.currentIssueType;
+                        }
+                    });
+
+                    const closeAndResolve = (value) => {
+                        document.body.removeChild(modal);
+                        document.body.removeChild(modalBackdrop);
+                        resolve(value);
+                    };
+
+                    document.getElementById('saveAllIssueNotesModal').onclick = async () => {
+                        let allSavedSuccessfully = true;
+                        const itemElements = modal.querySelectorAll('.issue-item-entry');
+
+                        for (const itemEl of itemElements) {
+                            const materialId = itemEl.dataset.materialId;
+                            const selectedIssueType = itemEl.querySelector('.issue-type-select').value;
+                            const issueDescription = itemEl.querySelector('textarea').value.trim();
+
+                            const success = await handleIssueDataSave(jobOrderNumber, materialId, selectedIssueType, issueDescription);
+                            if (!success) {
+                                allSavedSuccessfully = false;
+                            }
+                        }
+
+                        if (allSavedSuccessfully) {
+                            showMessageBox("Issue notes saved successfully.");
+                        } else {
+                            showMessageBox("Some issue notes may not have saved. Please check and try again.");
+                        }
+                        closeAndResolve(allSavedSuccessfully);
+                        renderAllTables();
+                    };
+
+                    document.getElementById('cancelIssueNotesModal').onclick = () => closeAndResolve(null);
+                    modalBackdrop.onclick = () => closeAndResolve(null);
+                });
+            }
+
+
+            function getDateDaysAgo(days) { const date = new Date(); date.setDate(date.getDate() - days); return date; }
+
+            // --- ZAKTUALIZOWANA FUNKCJA RENDEROWANIA TABELI ZAMÓWIEŃ ---
+            function renderPlacedMaterialOrdersTable() {
+                if (!placedMaterialOrdersTable || !placedMaterialOrdersTable.tBodies[0] || !Array.isArray(window.localPlacedMaterialOrderGroupsCache)) { return; }
+                const tbody = placedMaterialOrdersTable.tBodies[0]; tbody.innerHTML = '';
+
+                if (placedMaterialOrdersTitle) { placedMaterialOrdersTitle.textContent = window.showingArchivedOrders ? "Archived Material Orders" : "Placed Material Orders"; }
+                if (toggleArchivedOrdersBtn) { toggleArchivedOrdersBtn.textContent = window.showingArchivedOrders ? "View Active Orders" : "View Archived Orders"; }
+
+
+                if (window.localPlacedMaterialOrderGroupsCache.length === 0) {
+                    const message = window.showingArchivedOrders ? "No archived material orders." : "No active material orders placed.";
+                    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4">${message}</td></tr>`;
+                    return;
+                }
+
+                window.localPlacedMaterialOrderGroupsCache.forEach(group => {
+                    if (!group || !Array.isArray(group.items) || group.items.length === 0) return;
+
+                    const isGroupPlaced = group.orderPlaced;
+                    const isGroupDelivered = group.delivered;
+                    let groupRowClass = 'order-group-row-default';
+                    if (isGroupDelivered) groupRowClass = 'order-group-row-delivered';
+                    else if (isGroupPlaced) groupRowClass = 'order-group-row-placed';
+
+                    group.items.forEach((item, index) => {
+                        const row = tbody.insertRow();
+                        row.className = index === 0 ? groupRowClass : `${groupRowClass} placed-order-sub-item`;
+
+                        if (index === 0) {
+                            row.insertCell().innerHTML = item.materialFullName;
+                            row.insertCell().textContent = item.quantity;
+                            row.insertCell().textContent = group.orderedBy;
+                            row.insertCell().textContent = group.createdAt && group.createdAt.toDate ? group.createdAt.toDate().toLocaleString('en-GB') : 'N/A';
+                            
+                            const jdCell = row.insertCell();
+                            const jdNumberText = group.jobDocketNumber ? `<span class="font-bold">${group.jobDocketNumber}</span>` : '';
+                            const noteText = group.note ? `<br><span class="text-sm text-gray-400">${group.note}</span>` : '';
+                            jdCell.innerHTML = `${jdNumberText}${noteText}`;
+                            
+                            row.insertCell().textContent = group.poNumber || 'N/A';
+
+                            const placedCell = row.insertCell(); placedCell.className = 'text-center';
+                            const placedCheckbox = document.createElement('input'); placedCheckbox.type = 'checkbox';
+                            placedCheckbox.checked = isGroupPlaced;
+                            placedCheckbox.disabled = isGroupDelivered || window.showingArchivedOrders;
+                            placedCheckbox.dataset.groupId = group.groupId; placedCheckbox.dataset.statusType = 'orderPlaced';
+                            placedCheckbox.onchange = (e) => handlePlacedOrderStatusChange(group.groupId, 'orderPlaced', e.target);
+                            placedCell.appendChild(placedCheckbox);
+
+                            const deliveredCell = row.insertCell(); deliveredCell.className = 'text-center';
+                            const deliveredCheckbox = document.createElement('input'); deliveredCheckbox.type = 'checkbox';
+                            deliveredCheckbox.checked = isGroupDelivered;
+                            deliveredCheckbox.disabled = window.showingArchivedOrders;
+                            deliveredCheckbox.dataset.groupId = group.groupId; deliveredCheckbox.dataset.statusType = 'delivered';
+                            deliveredCheckbox.onchange = (e) => handlePlacedOrderStatusChange(group.groupId, 'delivered', e.target);
+                            deliveredCell.appendChild(deliveredCheckbox);
+                        } else {
+                            row.insertCell().innerHTML = item.materialFullName;
+                            row.insertCell().textContent = item.quantity;
+                            for(let i=0; i<6; i++) row.insertCell().textContent = '';
+                        }
+                    });
+                });
+            }
+            
+            // --- ZAKTUALIZOWANA FUNKCJA OBSŁUGI ZMIANY STATUSU ---
+            async function handlePlacedOrderStatusChange(groupId, statusType, checkboxElement) {
+                if (window.showingArchivedOrders) { 
+                    showMessageBox("Cannot modify archived orders."); 
+                    checkboxElement.checked = !checkboxElement.checked; 
+                    return; 
+                }
+
+                const newStatus = checkboxElement.checked;
+                const updateData = {};
+                const group = window.localPlacedMaterialOrderGroupsCache.find(g => g.groupId === groupId) || window.allMaterialOrderGroupsCache.find(g => g.groupId === groupId);
+
+                if (!group) { 
+                    showMessageBox("Error: Order group not found."); 
+                    checkboxElement.checked = !newStatus; 
+                    return; 
+                }
+
+                if (statusType === 'orderPlaced') {
+                    if (newStatus) {
+                        const currentPoNumber = group.poNumber || '';
+                        const enteredPoNumber = await showInputModal(`Enter PO Number for order placed:`, 'e.g., PO12345 (leave blank if none)', 'text', currentPoNumber);
+                        if (enteredPoNumber === null) { 
+                            checkboxElement.checked = false; 
+                            return; 
+                        }
+                        updateData.poNumber = enteredPoNumber.trim() || null;
+                        updateData.orderPlaced = true;
+                    } else {
+                        if (group.delivered) { 
+                            showMessageBox("Cannot unmark 'Order Placed' for a delivered order. Uncheck 'Delivered' first."); 
+                            checkboxElement.checked = true; 
+                            return; 
+                        }
+                        updateData.orderPlaced = false;
+                        updateData.poNumber = null; // Clear PO number if unchecked
+                    }
+                } else if (statusType === 'delivered') {
+                    if (newStatus) {
+                        updateData.delivered = true;
+                        if (!group.orderPlaced) {
+                            updateData.orderPlaced = true;
+                            const currentPoNumber = group.poNumber || '';
+                             const enteredPoNumber = await showInputModal(`Order marked delivered. Enter PO Number (if not set):`, 'e.g., PO12345', 'text', currentPoNumber);
+                             if (enteredPoNumber === null) {
+                                checkboxElement.checked = false;
+                                updateData.delivered = false;
+                                updateData.orderPlaced = group.orderPlaced; 
+                                return;
+                            } else {
+                                updateData.poNumber = enteredPoNumber.trim() || null;
+                            }
+                        }
+                    } else {
+                        updateData.delivered = false;
+                    }
+                }
+
+                if (Object.keys(updateData).length > 0) {
+                    const groupRef = window.fb.doc(window.placedMaterialOrderGroupsCollection, groupId);
+                    try {
+                        await window.fb.updateDoc(groupRef, updateData);
+                    } catch (error) {
+                        console.error("DEBUG: Error updating order status:", error);
+                        showMessageBox("Failed to update order status. Check console.");
+                        checkboxElement.checked = !newStatus; // Revert checkbox on error
+                    }
+                }
+            }
+            
+            // --- NOWA FUNKCJA DO KOREKTY STANU ---
+            async function adjustStockForMaterial(materialId, materialFullName) {
+                const material = window.localStockDataCache.find(m => m.id === materialId);
+                if (!material) {
+                    showMessageBox("Material not found.");
+                    return;
+                }
+
+                const currentSystemStock = calculateAndUpdateTotalStock(material);
+                const physicalStock = await showSliderModal(
+                    `Perform stock take for: ${materialFullName}. Enter the actual physical quantity in stock.`,
+                    currentSystemStock, 0, (currentSystemStock + 100), 1
+                );
+
+                if (physicalStock !== null && !isNaN(physicalStock) && physicalStock >= 0) {
+                    const oldInitialStock = Number(material.initialStock || 0);
+                    const delta = physicalStock - currentSystemStock;
+                    const newInitialStock = oldInitialStock + delta;
+
+                    if (!window.fb || !window.db || !window.materialsCollection) {
+                        showMessageBox("Database connection not ready.");
+                        return;
+                    }
+                    const materialRef = window.fb.doc(window.materialsCollection, materialId);
+                    try {
+                        await window.fb.updateDoc(materialRef, { initialStock: newInitialStock });
+                        showMessageBox(`Stock for ${materialFullName} adjusted successfully. New initial stock value is ${newInitialStock}.`);
+                    } catch (error) {
+                        console.error("DEBUG: Error adjusting stock:", error);
+                        showMessageBox("Failed to adjust stock. Check console.");
+                    }
+                } else if (physicalStock !== null) {
+                    showMessageBox("Invalid input for physical stock. Please enter a non-negative number.");
+                }
+            }
+
+            async function editMinStockForMaterial(materialId, materialFullName) {
+                // DEBUG: editMinStockForMaterial for ID: materialId
+                const material = window.localStockDataCache.find(m => m.id === materialId);
+                if (!material) { showMessageBox("Material not found."); return; }
+                const currentMinStock = material.minStock || 0;
+                const newMinStockVal = await showSliderModal(`Set minimum stock for ${materialFullName}:`, currentMinStock, 0, 100, 1);
+
+                if (newMinStockVal !== null && !isNaN(newMinStockVal) && newMinStockVal >= 0) {
+                    if (!window.fb || !window.db || !window.materialsCollection) { showMessageBox("Database connection not ready."); return; }
+                    const materialRef = window.fb.doc(window.materialsCollection, materialId);
+                    try {
+                        await window.fb.updateDoc(materialRef, { minStock: Number(newMinStockVal) });
+                        showMessageBox(`Minimum stock for ${materialFullName} updated to ${newMinStockVal}.`);
+                    } catch (error) {
+                        console.error("DEBUG: Error updating min stock:", error);
+                        showMessageBox("Failed to update minimum stock. Check console.");
+                    }
+                } else if (newMinStockVal !== null) {
+                    showMessageBox("Invalid input for minimum stock. Please enter a non-negative number.");
+                }
+            }
+
+            async function deleteMaterialDefinition(materialId, materialFullName) {
+                // DEBUG: deleteMaterialDefinition for ID: materialId
+                if (!window.fb || !window.db || !window.materialsCollection) { showMessageBox("Database connection not ready."); return; }
+                const confirmed = await showConfirmModal(`Are you sure you want to delete "${materialFullName}"? This action cannot be undone.`);
+                if (confirmed) {
+                    try {
+                        const materialRef = window.fb.doc(window.materialsCollection, materialId);
+                        await window.fb.deleteDoc(materialRef);
+                        showMessageBox(`Material "${materialFullName}" deleted successfully.`);
+                    } catch (error) {
+                        console.error("DEBUG: Error deleting material:", error);
+                        showMessageBox("Error deleting material. Check console.");
+                    }
+                }
+            }
+
+            async function deleteJobOrder(jobOrderNumberToDelete) {
+                // DEBUG: deleteJobOrder for: jobOrderNumberToDelete
+                if (!window.fb || !window.db || !window.jobOrdersCollection || !window.materialsCollection) { showMessageBox("Firebase not initialized correctly."); return; }
+                const confirmed = await showConfirmModal(`Delete Job Order "${jobOrderNumberToDelete}"? This will remove its consumption data and any issue notes.`);
+                if (confirmed) {
+                    try {
+                        const batch = window.fb.writeBatch(window.db);
+                        const jobOrderRef = window.fb.doc(window.jobOrdersCollection, jobOrderNumberToDelete);
+                        batch.delete(jobOrderRef);
+
+                        if (Array.isArray(window.localStockDataCache)) {
+                            window.localStockDataCache.forEach(material => {
+                                if (material.orders && typeof material.orders === 'object' && material.orders[jobOrderNumberToDelete] !== undefined) {
+                                    const materialRef = window.fb.doc(window.materialsCollection, material.id);
+                                    const newOrders = { ...material.orders };
+                                    delete newOrders[jobOrderNumberToDelete];
+                                    batch.update(materialRef, { orders: newOrders });
+                                }
+                            });
+                        }
+                        await batch.commit();
+                        showMessageBox(`Job Order "${jobOrderNumberToDelete}" deleted successfully.`);
+                    } catch (error) {
+                        console.error("DEBUG: Error deleting job order:", error);
+                        showMessageBox("Error deleting job order. Check console.");
+                    }
+                }
+            }
+
+            async function handleGenericCellEdit(event) {
+                // DEBUG: handleGenericCellEdit triggered on element: event.target
+                const cell = event.target.closest('td');
+                const materialItemSpan = event.target.closest('.used-material-item');
+
+                if (materialItemSpan && materialItemSpan.dataset.materialId && materialItemSpan.dataset.jobOrderNumber) {
+                    const materialIdFromSpan = materialItemSpan.dataset.materialId;
+                    const jobOrderNumberFromSpan = materialItemSpan.dataset.jobOrderNumber;
+                    const currentValueFromSpan = materialItemSpan.dataset.currentValue;
+                    const materialFromSpan = window.localStockDataCache.find(m => m.id === materialIdFromSpan);
+
+                    if (materialFromSpan) {
+                        const orderData = materialFromSpan.orders[jobOrderNumberFromSpan];
+                        let currentHasIssue = false;
+                        let currentIssueType = 'no_issue';
+                        let currentIssueDescription = "";
+
+                        if (typeof orderData === 'object' && orderData !== null) {
+                            currentHasIssue = orderData.hasIssue || false;
+                            currentIssueType = orderData.issueType || 'no_issue';
+                            currentIssueDescription = orderData.issueDescription || "";
+                        }
+
+
+                        const newValue = await showSliderModal(
+                            `Set consumption for ${getFullMaterialName(materialFromSpan, false)} on Job ${jobOrderNumberFromSpan}:`,
+                            parseInt(currentValueFromSpan) || 0, 0, 50, 1
+                        );
+
+                        if (newValue !== null && !isNaN(newValue) && newValue >= 0) {
+                            if (!window.fb || !window.db || !window.materialsCollection) { showMessageBox("Database connection not ready."); return; }
+                            const materialRef = window.fb.doc(window.materialsCollection, materialIdFromSpan);
+                            try {
+                                await window.fb.runTransaction(db, async (transaction) => {
+                                    const materialDoc = await transaction.get(materialRef);
+                                    if (!materialDoc.exists()) { throw "Material document does not exist!"; }
+                                    const materialData = materialDoc.data();
+                                    const currentOrders = materialData.orders || {};
+
+                                    currentOrders[jobOrderNumberFromSpan] = {
+                                        quantity: Number(newValue),
+                                        hasIssue: currentHasIssue,
+                                        issueType: currentIssueType,
+                                        issueDescription: currentIssueDescription
+                                    };
+                                    transaction.update(materialRef, { orders: currentOrders });
+                                });
+                                showMessageBox(`Consumption for ${jobOrderNumberFromSpan} on ${getFullMaterialName(materialFromSpan, false)} updated to ${newValue}.`);
+                            } catch (error) {
+                                console.error("DEBUG: Error updating consumption via transaction:", error);
+                                showMessageBox("Failed to update consumption. Check console.");
+                            }
+                        } else if (newValue !== null) {
+                            showMessageBox("Invalid input. Please enter a non-negative number.");
+                        }
+                    }
+                    return;
+                }
+
+                if (cell && cell.dataset.fieldName === 'minStock' && cell.dataset.materialId) {
+                    const materialId = cell.dataset.materialId;
+                    const materialToEdit = window.localStockDataCache.find(m => m.id === materialId);
+                    if (materialToEdit) {
+                        editMinStockForMaterial(materialId, getFullMaterialName(materialToEdit, false));
+                    }
+                    return;
+                }
+            }
+
+            function renderAllTables() {
+                // DEBUG: renderAllTables called
+                try {
+                    if(typeof renderStockOverviewTable === 'function') renderStockOverviewTable(); else console.error("DEBUG: renderStockOverviewTable is not defined properly");
+                    if(typeof renderJobOrderConsumptionTable === 'function') renderJobOrderConsumptionTable();  else console.error("DEBUG: renderJobOrderConsumptionTable is not a function");
+                    if(typeof renderPlacedMaterialOrdersTable === 'function') renderPlacedMaterialOrdersTable();  else console.error("DEBUG: renderPlacedMaterialOrdersTable is not a function");
+                } catch (e) { console.error("DEBUG: Error during renderAllTables execution:", e); showMessageBox("Error rendering tables. Check console."); }
+                // DEBUG: renderAllTables finished
+            }
+
+            // --- Firebase Listeners ---
+            function listenToStockData() {
+                // DEBUG: listenToStockData START
+                if (!window.materialsCollection) { console.error("DEBUG: materialsCollection is not initialized."); showMessageBox("Error: Materials DB not ready."); return; }
+                const q = window.fb.query(
+                    window.materialsCollection,
+                    window.fb.orderBy("department"),
+                    window.fb.orderBy("name"),
+                    window.fb.orderBy("thickness"),
+                    window.fb.orderBy("size"),
+                    window.fb.orderBy("colorType")
+                );
+                window.fb.onSnapshot(q, (snapshot) => {
+                    // DEBUG: listenToStockData - snapshot received, docs: snapshot.docs.length
+                    window.localStockDataCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderAllTables();
+                }, (error) => {
+                    console.error("DEBUG: Error listening to stock data: ", error);
+                    if (error.code === 'failed-precondition' && String(error.message || '').includes("index")) {
+                        showMessageBox( "Error: Firestore requires a new index for materials (e.g., department ASC, name ASC, thickness ASC, size ASC, colorType ASC). Check Firebase console. Err: " + error.message );
+                    } else { showMessageBox("Error loading materials. Check console. Msg: " + error.message); }
+                });
+            }
+
+            function listenToJobOrders() {
+                // DEBUG: listenToJobOrders START
+                if (!window.jobOrdersCollection) { console.error("DEBUG: jobOrdersCollection is not initialized."); showMessageBox("Error: Job Orders DB not ready."); return; }
+                const q = window.fb.query(window.jobOrdersCollection, window.fb.orderBy("createdAt", "desc"));
+                window.fb.onSnapshot(q, (snapshot) => {
+                    // DEBUG: listenToJobOrders - snapshot received, docs: snapshot.docs.length
+                    const newJONums = [], newOTypes = {}, newCache = [];
+                    snapshot.forEach((doc) => {
+                        const jo = { id: doc.id, ...doc.data() };
+                        newCache.push(jo);
+                        if (jo.jobOrderNumber) {
+                            newJONums.push(jo.jobOrderNumber);
+                            newOTypes[jo.jobOrderNumber] = { type: jo.type || 'out', prefix: jo.prefix };
+                        }
+                    });
+                    window.localJobOrdersCache = newCache;
+                    window.jobOrderNumbers = newJONums;
+                    window.orderTypes = newOTypes;
+                    renderAllTables();
+                }, (error) => { console.error("DEBUG: Error listening to job orders: ", error); showMessageBox("Error loading job orders. Check console."); });
+            }
+
+            // New listener for ALL placed material orders (for calculation)
+            function listenToAllPlacedMaterialOrders() {
+                // DEBUG: listenToAllPlacedMaterialOrders START
+                if (!window.placedMaterialOrderGroupsCollection) {
+                    console.error("DEBUG: placedMaterialOrderGroupsCollection not initialized for all orders listener.");
+                    showMessageBox("Error: Placed Orders DB (All) not ready.");
+                    return;
+                }
+                // Query for ALL orders, ordered by creation date, without isArchived filter
+                const qAll = window.fb.query(
+                    window.placedMaterialOrderGroupsCollection,
+                    window.fb.orderBy("createdAt", "desc")
+                );
+
+                window.fb.onSnapshot(qAll, (snapshot) => {
+                    // DEBUG: AllPlacedMaterialOrders snapshot, docs: snapshot.docs.length
+                    window.allMaterialOrderGroupsCache = snapshot.docs.map(doc => ({ groupId: doc.id, ...doc.data() }));
+                    // DEBUG: allMaterialOrderGroupsCache updated, length: window.allMaterialOrderGroupsCache.length
+
+                    // This data is primarily for calculations in renderStockOverviewTable.
+                    // If other tables don't directly depend on this full unfiltered list,
+                    // just re-rendering the stock overview might be enough.
+                    // However, to be safe or if there are indirect dependencies, call renderAllTables.
+                    // For this specific fix, ensuring stock overview is correct is paramount.
+                    renderStockOverviewTable();
+                }, (error) => {
+                    console.error("DEBUG: Error listening to all placed material orders: ", error);
+                    showMessageBox("Error loading all placed material orders for calculations. Totals may be inaccurate. Check console.");
+                });
+            }
+
+
+            // Existing listener for Placed Material Orders (for display, filtered by archive status)
+            function listenToPlacedMaterialOrders(showArchived = false) {
+                // DEBUG: listenToPlacedMaterialOrders START, showArchived: showArchived
+                if (placedOrdersUnsubscribe) { placedOrdersUnsubscribe(); }
+                if (!window.placedMaterialOrderGroupsCollection) { console.error("DEBUG: placedMaterialOrderGroupsCollection not initialized."); showMessageBox("Error: Placed Orders DB not ready."); return; }
+
+                let q;
+                if (showArchived) {
+                    q = window.fb.query( window.placedMaterialOrderGroupsCollection, window.fb.where("isArchived", "==", true), window.fb.orderBy("createdAt", "desc") );
+                    if(toggleArchivedOrdersBtn) toggleArchivedOrdersBtn.textContent = 'View Active Orders';
+                    if(placedMaterialOrdersTitle) placedMaterialOrdersTitle.textContent = 'Archived Material Orders';
+                } else {
+                    q = window.fb.query( window.placedMaterialOrderGroupsCollection, window.fb.where("isArchived", "in", [false, null]), window.fb.orderBy("createdAt", "desc") );
+                    if(toggleArchivedOrdersBtn) toggleArchivedOrdersBtn.textContent = 'View Archived Orders';
+                    if(placedMaterialOrdersTitle) placedMaterialOrdersTitle.textContent = 'Placed Material Orders';
+                }
+                placedOrdersUnsubscribe = window.fb.onSnapshot(q, async (snapshot) => {
+                    // DEBUG: PlacedMaterialOrders snapshot (archived: showArchived), docs: snapshot.docs.length
+                    const twoDaysAgo = getDateDaysAgo(2);
+                    const batch = window.fb.writeBatch(window.db);
+                    let hasUpdatesInBatch = false;
+
+                    // This cache is for DISPLAY purposes in the "Placed Material Orders" table
+                    const newCacheForDisplay = snapshot.docs.reduce((acc, doc) => {
+                        const groupData = { groupId: doc.id, ...doc.data() };
+                        const createdAtDate = groupData.createdAt && groupData.createdAt.toDate ? groupData.createdAt.toDate() : null;
+
+                        if (!showArchived && groupData.delivered && createdAtDate && createdAtDate < twoDaysAgo && groupData.isArchived !== true) {
+                            // DEBUG: Auto-archiving order groupData.groupId
+                            const groupRef = window.fb.doc(window.placedMaterialOrderGroupsCollection, groupData.groupId);
+                            batch.update(groupRef, { isArchived: true, archivedAt: window.fb.serverTimestamp() });
+                            hasUpdatesInBatch = true;
+                            return acc;
+                        }
+                        acc.push(groupData);
+                        return acc;
+                    }, []);
+
+                    if (hasUpdatesInBatch) {
+                        try {
+                            await batch.commit();
+                            // DEBUG: Batch auto-archive successful. The listeners will pick up this change.
+                        } catch (error) { console.error("DEBUG: Error auto-archiving:", error); }
+                    }
+                    window.localPlacedMaterialOrderGroupsCache = newCacheForDisplay; // Update cache for display
+                    renderAllTables(); // Re-render tables based on potentially updated display cache
+                }, (error) => {
+                    console.error("DEBUG: Error listening to placed material orders: ", error);
+                    if (error.code === 'failed-precondition' && String(error.message || '').includes("index")) {
+                        showMessageBox("Error: Firestore needs index (isArchived, createdAt) for Placed Orders. Check Firebase console. Err: " + error.message);
+                    } else { showMessageBox("Error loading placed material orders. Check console."); }
+                });
+            }
+
+
+            // --- Event Listener Attachments ---
+            // DEBUG: Attaching button event listeners in onload...
+            if(addMaterialBtn) addMaterialBtn.addEventListener('click', async () => {
+                // DEBUG: Add Material button clicked.
+                if (!window.fb || !window.db || !window.materialsCollection) { showMessageBox("Firebase not initialized correctly."); return; }
+                const materialDetails = await showAddMaterialPropertiesModal();
+                if (materialDetails) {
+                    const materialBaseName = String(materialDetails.name || '').trim().toUpperCase();
+                    let baseColor = window.materialTypeColors[getMaterialBaseType(materialDetails.name)] || getNextAvailableColor(materialBaseName);
+
+                    const newMaterialData = { ...materialDetails, baseColor: baseColor, orders: {} };
+                    try {
+                        await window.fb.addDoc(window.materialsCollection, newMaterialData);
+                        showMessageBox("Material added successfully!");
+                    } catch (error) {
+                        console.error("DEBUG: Error adding material:", error);
+                        showMessageBox("Error adding material. Check console.");
+                    }
+                }
+            }); else console.error("DEBUG: addMaterialBtn not found!");
+
+            if(checkOutStockBtn) checkOutStockBtn.addEventListener('click', async () => {
+                // DEBUG: Check Out Stock button clicked.
+                if (!window.fb || !window.db || !window.materialsCollection || !window.jobOrdersCollection) { showMessageBox("Firebase not initialized correctly."); return; }
+
+                const jobOrderDetails = await showSelectOrCreateJobOrderModal();
+                if (!jobOrderDetails) return;
+
+                if (jobOrderDetails.isNew) {
+                    const jobOrderRef = window.fb.doc(window.jobOrdersCollection, jobOrderDetails.jobOrderNumber);
+                    try {
+                        const jobOrderSnap = await window.fb.getDoc(jobOrderRef);
+                        if (!jobOrderSnap.exists()) {
+                            await window.fb.setDoc(jobOrderRef, {
+                                jobOrderNumber: jobOrderDetails.jobOrderNumber,
+                                prefix: jobOrderDetails.prefix,
+                                type: 'out',
+                                createdAt: window.fb.serverTimestamp(),
+                            });
+                            // DEBUG: New Job Order document created: jobOrderDetails.jobOrderNumber
+                        } else {
+                             jobOrderDetails.isNew = false;
+                        }
+                    } catch (error) {
+                        console.error("DEBUG: Error ensuring new job order exists:", error);
+                        showMessageBox("Error processing job order. Please try again.");
+                        return;
+                    }
+                }
+
+                const checkoutData = await showMaterialUsageForJobOrderModal(jobOrderDetails);
+                if (checkoutData && Array.isArray(checkoutData.usageArray) && checkoutData.usageArray.length > 0) {
+                    const { usageArray, jobOrderDetails: finalJobOrderDetails } = checkoutData;
+                    try {
+                        await window.fb.runTransaction(db, async (transaction) => {
+                            const materialReadsPromises = [];
+                            for (const usage of usageArray) {
+                                const materialRef = window.fb.doc(window.materialsCollection, usage.materialId);
+                                materialReadsPromises.push(transaction.get(materialRef).then(doc => ({ doc, usage, ref: materialRef })));
+                            }
+                            const materialDocsWithUsage = await Promise.all(materialReadsPromises);
+
+                            for (const item of materialDocsWithUsage) {
+                                if (!item.doc.exists()) {
+                                    throw `Material with ID ${item.usage.materialId} not found. Transaction will be rolled back.`;
+                                }
+                                const materialData = item.doc.data();
+                                const currentOrders = materialData.orders || {};
+                                const existingOrderData = currentOrders[finalJobOrderDetails.jobOrderNumber];
+                                let existingQuantity = 0;
+                                let finalHasIssue = item.usage.hasIssue;
+                                let finalIssueType = item.usage.hasIssue ? 'no_issue' : null;
+                                let finalIssueDescription = "";
+
+
+                                if (typeof existingOrderData === 'object' && existingOrderData !== null) {
+                                    existingQuantity = existingOrderData.quantity || 0;
+                                    finalHasIssue = item.usage.hasIssue || (existingOrderData.hasIssue || false);
+                                    finalIssueType = item.usage.hasIssue ? 'no_issue' : (existingOrderData.issueType || 'no_issue');
+                                    finalIssueDescription = item.usage.hasIssue ? '' : (existingOrderData.issueDescription || "");
+                                } else if (typeof existingOrderData === 'number') {
+                                    existingQuantity = existingOrderData;
+                                }
+
+                                const newQuantity = existingQuantity + item.usage.quantityToUse;
+
+                                currentOrders[finalJobOrderDetails.jobOrderNumber] = {
+                                    quantity: newQuantity,
+                                    hasIssue: finalHasIssue,
+                                    issueType: finalIssueType,
+                                    issueDescription: finalIssueDescription
+                                };
+
+                                transaction.update(item.ref, { orders: currentOrders });
+                            }
+                        });
+                        showMessageBox(`Stock successfully checked out for Job ${finalJobOrderDetails.jobOrderNumber}.`);
+                    } catch (error) {
+                        console.error("DEBUG: Error during stock checkout transaction:", error);
+                        showMessageBox("Failed to check out stock. Transaction failed. Check console. Error: " + error);
+                    }
+                } else if (checkoutData) {
+                    showMessageBox("No materials were specified for checkout.");
+                }
+            }); else console.error("DEBUG: checkOutStockBtn not found!");
+
+
+            if(addMaterialOrderBtn) addMaterialOrderBtn.addEventListener('click', async () => {
+                // DEBUG: Add Material Order button clicked.
+                if (!window.fb || !window.db || !window.placedMaterialOrderGroupsCollection) { showMessageBox("Firebase not initialized for placed orders."); return; }
+                const newOrderGroup = await showPlaceNewMaterialOrderModal();
+                if (newOrderGroup && Array.isArray(newOrderGroup.items) && newOrderGroup.items.length > 0) {
+                    try {
+                        await window.fb.addDoc(window.placedMaterialOrderGroupsCollection, newOrderGroup);
+                        showMessageBox("Material order group placed successfully!");
+                    } catch (error) {
+                        console.error("DEBUG: Error adding material order group:", error);
+                        showMessageBox("Error adding material order group. Check console.");
+                    }
+                }
+            }); else console.error("DEBUG: addMaterialOrderBtn not found!");
+
+            if (toggleArchivedOrdersBtn) {
+                toggleArchivedOrdersBtn.addEventListener('click', () => {
+                    // DEBUG: Toggle Archived Orders button clicked.
+                    window.showingArchivedOrders = !window.showingArchivedOrders;
+                    // This will re-trigger the listener for the displayed table,
+                    // but the calculation cache (allMaterialOrderGroupsCache) remains unaffected by this toggle.
+                    listenToPlacedMaterialOrders(window.showingArchivedOrders);
+                });
+            } else console.error("DEBUG: toggleArchivedOrdersBtn not found!");
+
+            // DEBUG: Button event listeners attached.
+
+            if(stockOverviewContainer) stockOverviewContainer.addEventListener('dblclick', handleGenericCellEdit);
+            if(jobOrderConsumptionTable) {
+                jobOrderConsumptionTable.addEventListener('dblclick', handleGenericCellEdit);
+                jobOrderConsumptionTable.addEventListener('click', function(event) {
+                    if (event.target.classList.contains('job-order-issue-icon')) {
+                        const jobOrderNumber = event.target.dataset.jobOrderNumber;
+                        if (jobOrderNumber) {
+                            showJobOrderIssueModal(jobOrderNumber);
+                        }
+                    }
+                });
+            }
+
+
+            const checkFirebaseInterval = setInterval(() => {
+                if (window.db && window.fb && typeof window.fb.collection === 'function') {
+                    clearInterval(checkFirebaseInterval);
+                    // DEBUG: Firebase core ready, proceeding with app initializations.
+                    try {
+                        window.materialsCollection = window.fb.collection(window.db, "materials");
+                        window.jobOrdersCollection = window.fb.collection(window.db, "jobOrders");
+                        window.placedMaterialOrderGroupsCollection = window.fb.collection(window.db, "placedMaterialOrderGroups");
+                        // DEBUG: Collections references set.
+
+                        if (window.materialsCollection) listenToStockData(); else console.error("DEBUG: materialsCollection FAIL for listener.");
+                        if (window.jobOrdersCollection) listenToJobOrders(); else console.error("DEBUG: jobOrdersCollection FAIL for listener.");
+                        if (window.placedMaterialOrderGroupsCollection) {
+                            listenToAllPlacedMaterialOrders(); // For calculation cache
+                            listenToPlacedMaterialOrders(window.showingArchivedOrders); // For display cache
+                        } else {
+                             console.error("DEBUG: placedMaterialOrderGroupsCollection FAIL for listeners.");
+                        }
+                        // DEBUG: Listeners setup attempted.
+                    } catch (e) {
+                        console.error("DEBUG: CRITICAL ERROR in window.onload (Firebase setup)", e);
+                        showMessageBox("Critical DB init error. Msg: " + e.message);
+                    }
+                }
+            }, 100);
+        }; // End of window.onload
+        // DEBUG: Main script execution finished.
+    </script>
+</body>
+</html>

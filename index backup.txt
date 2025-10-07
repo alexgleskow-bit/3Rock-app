@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material Stock Monitoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #242A31; 
+            color: #e2e8f0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1.5rem; 
+        }
+        .logo-container img {
+            max-width: 300px; 
+            height: auto;
+            border-radius: 8px; 
+            display: inline-block; 
+        }
+        .main-content-wrapper { 
+            flex-grow: 1; 
+        }
+        .main-container {
+            background-color: #2d3748; 
+        }
+        .table-section { 
+            margin-bottom: 3rem; 
+        }
+        .table-container {
+            overflow-x: auto; 
+            max-width: 100%;
+        }
+        table {
+            width: 100%; 
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px 12px; 
+            text-align: left;
+            border-bottom: 1px solid #374151;
+        }
+        th {
+            background-color: #374151; 
+            font-weight: 600;
+            color: #cbd5e1; 
+            vertical-align: top; 
+        }
+        #jobOrderConsumptionTable th {
+            white-space: normal; 
+        }
+        #jobOrderConsumptionTable td {
+            white-space: nowrap; 
+        }
+        #placedMaterialOrdersTable td, #placedMaterialOrdersTable th {
+            white-space: normal; 
+            text-align: center; 
+            vertical-align: middle; 
+        }
+        #placedMaterialOrdersTable th:first-child, 
+        #placedMaterialOrdersTable td:first-child,
+        #placedMaterialOrdersTable th:nth-child(3), 
+        #placedMaterialOrdersTable td:nth-child(3) {
+            text-align: left; 
+        }
+        .placed-order-sub-item td:first-child {
+            padding-left: 2.5rem !important; 
+        }
+        .placed-order-sub-item td {
+            font-size: 0.9em;
+            color: #bdc3c7; 
+        }
+
+        td {
+            background-color: #2d3748; 
+            color: #e2e8f0; 
+        }
+        
+        #stockOverviewTable tr:hover td, 
+        #jobOrderConsumptionTable tr:hover td {
+             background-color: #3b4b5c; 
+        }
+        
+        #placedMaterialOrdersTable tr.order-group-row-default:hover td,
+        #placedMaterialOrdersTable tr.placed-order-sub-item.order-group-row-default:hover td {
+            background-color: #3b4b5c !important;
+        }
+        #placedMaterialOrdersTable tr.order-group-row-placed td {
+            background-color: #78350f !important; 
+            color: #fed7aa !important; 
+        }
+        #placedMaterialOrdersTable tr.order-group-row-placed:hover td {
+            background-color: #9a3412 !important; 
+        }
+        #placedMaterialOrdersTable tr.order-group-row-delivered td {
+            background-color: #065f46 !important; 
+            color: #a7f3d0 !important; 
+        }
+         #placedMaterialOrdersTable tr.order-group-row-delivered:hover td {
+            background-color: #047857 !important; 
+        }
+
+        .material-header-cell {
+            min-width: 100px; 
+            max-width: 150px; 
+            padding: 8px 6px; 
+            text-align: center; 
+        }
+        .material-header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            text-align: center;
+        }
+        .material-header-name {
+            font-weight: bold;
+            font-size: 0.8rem; 
+            padding: 3px 5px; 
+            border-radius: 4px;
+            margin-bottom: 3px; 
+            color: #ffffff; 
+            display: inline-block; 
+            width: 100%; 
+            box-sizing: border-box; 
+        }
+        .material-header-details {
+            font-size: 0.7rem; 
+            color: #a0aec0; 
+            line-height: 1.1; 
+        }
+
+        input[type="number"], input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #4b5563; 
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            background-color: #1f2937; 
+            color: #e2e8f0; 
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield; 
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none; 
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #4b5563; 
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            border-radius: 4px;
+        }
+        input[type="range"]:hover {
+            opacity: 1;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #00D084; 
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #00D084; 
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        input[type="checkbox"] {
+            width: 1.25rem; 
+            height: 1.25rem; 
+            border-radius: 0.25rem; 
+            border: 1px solid #64748b; 
+            background-color: #374151;
+            cursor: pointer;
+            appearance: none; 
+            -webkit-appearance: none;
+            position: relative;
+            vertical-align: middle; 
+        }
+        input[type="checkbox"]:checked {
+            background-color: #00D084; 
+            border-color: #00D084;
+        }
+        input[type="checkbox"]:checked::before { 
+            content: "✓"; 
+            display: block;
+            text-align: center;
+            color: #1f2937; 
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9rem; 
+            font-weight: bold;
+            line-height: 1; 
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary { 
+            background-color: #00D084; 
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #00B373; 
+            transform: translateY(-1px);
+        }
+        .btn-secondary { 
+            background-color: #00A96E; 
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #008F5C; 
+            transform: translateY(-1px);
+        }
+         .btn-tertiary { 
+            background-color: #047857; 
+            color: white;
+        }
+        .btn-tertiary:hover {
+            background-color: #065f46; 
+            transform: translateY(-1px);
+        }
+        .btn-edit {
+            background-color: #f59e0b; 
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+            box-shadow: none;
+            margin-right: 8px; 
+        }
+        .btn-edit:hover {
+            background-color: #d97706;
+            transform: translateY(-1px);
+        }
+        .btn-delete {
+            background-color: #dc2626; 
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+            box-shadow: none;
+        }
+        .btn-delete:hover {
+            background-color: #b91c1c;
+            transform: translateY(-1px);
+        }
+        .btn-delete-job-order { 
+            background-color: transparent;
+            color: #ef4444; 
+            padding: 2px 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            margin-left: 8px; 
+            cursor: pointer;
+            line-height: 1; 
+        }
+        .btn-delete-job-order:hover {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .modal-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2d3748; 
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); 
+            z-index: 1000;
+            text-align: left; 
+            max-width: 90%;
+            width: 500px; 
+            color: #e2e8f0; 
+            max-height: 80vh; 
+            overflow-y: auto; 
+        }
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); 
+            z-index: 999;
+        }
+        .quantity-in { 
+            color: #34d399; 
+            font-weight: 500;
+        }
+        .quantity-out { 
+            color: #ef4444; 
+            font-weight: 500;
+        }
+        .quantity-zero { 
+            color: #e2e8f0; 
+            font-weight: normal; 
+        }
+        .text-red-highlight { 
+            color: #ef4444; 
+        }
+        .text-green-highlight {
+            color: #34d399;
+            font-weight: 500;
+        }
+        .text-default-color { 
+            color: #e2e8f0;
+        }
+        .total-stock-positive {
+             color: #60a5fa; 
+        }
+        .total-stock-negative {
+            color: #f87171; 
+        }
+        .total-stock-display { 
+            font-weight: 700;
+            display: flex; 
+            align-items: center;
+            gap: 8px; 
+        }
+        .warning-icon {
+            color: #facc15; 
+            width: 20px;
+            height: 20px;
+            fill: currentColor; 
+        }
+        .modal-box input[type="text"],
+        .modal-box input[type="number"],
+        .modal-box select {
+            background-color: #1f2937;
+            border-color: #4b5563;
+            color: #e2e8f0;
+        }
+        .material-order-item {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #4b5563;
+        }
+        .material-order-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .material-order-item label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+        .material-order-item .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .material-order-item input[type="range"] {
+            flex-grow: 1;
+        }
+        .material-order-item .slider-value {
+            font-weight: bold;
+            min-width: 25px; 
+            text-align: right;
+        }
+        .form-group { 
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem; 
+            font-weight: 500;
+            color: #cbd5e1; 
+        }
+        #jobOrderConsumptionTable th:first-child,
+        #jobOrderConsumptionTable td:first-child { 
+            white-space: nowrap; 
+        }
+        .footer {
+            text-align: center;
+            padding: 1.5rem; 
+            margin-top: 2rem; 
+            font-size: 0.875rem; 
+            color: #a0aec0; 
+            border-top: 1px solid #374151; 
+        }
+
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, getDoc, setDoc, query, orderBy, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"; 
+      
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlgesvhQe-yPxOdrdTasOFWhh88RxHsmI",
+            authDomain: "rockers-a2c48.firebaseapp.com",
+            projectId: "rockers-a2c48",
+            storageBucket: "rockers-a2c48.appspot.com",
+            messagingSenderId: "518428210643",
+            appId: "1:518428210643:web:ca3db6dd1a22844c452b26",
+            measurementId: "G-1S1D9J4TGW"
+        };
+      
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app); 
+      
+        window.db = db; 
+        window.fb = { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, getDoc, setDoc, query, orderBy, writeBatch, serverTimestamp }; 
+    </script>
+
+    <div class="main-content-wrapper">
+        <div class="max-w-7xl mx-auto main-container rounded-xl shadow-lg p-6 sm:p-8 lg:p-10">
+            <div class="logo-container">
+                <img src="Logo.png" alt="Logo Firmy" onerror="this.style.display='none'; console.error('Logo.png not found or error loading image.')">
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-100 mb-6 text-center">Material Stock Monitoring</h1>
+
+            <div class="flex flex-col sm:flex-row justify-center sm:justify-start gap-4 mb-8">
+                <button id="addMaterialBtn" class="btn btn-primary">Add Material</button>
+                <button id="addJobOrderBtn" class="btn btn-secondary">Add Job Order</button>
+                <button id="addMaterialOrderBtn" class="btn btn-tertiary">Add Material Order</button> 
+            </div>
+
+            <div class="table-section rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold text-gray-200 mb-4 px-1">Stock Overview</h2>
+                <div class="table-container">
+                    <table id="stockOverviewTable" class="w-full border-collapse">
+                        <thead>
+                            <tr>
+                                <th class="rounded-tl-lg">Material</th>
+                                <th>Initial Stock</th>
+                                <th>Total Used (Jobs)</th>
+                                <th>Delivered (Orders)</th>
+                                <th>Total Stock</th>
+                                <th>Min. Stock</th>
+                                <th class="rounded-tr-lg">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-section rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold text-gray-200 mb-4 px-1">Job Order - Material Usage</h2>
+                <div class="table-container">
+                    <table id="jobOrderConsumptionTable" class="w-full border-collapse">
+                        <thead>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-section rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold text-gray-200 mb-4 px-1">Placed Material Orders</h2>
+                <div class="table-container">
+                    <table id="placedMaterialOrdersTable" class="w-full border-collapse" style="min-width: 850px;"> <thead>
+                            <tr>
+                                <th class="rounded-tl-lg">Material</th>
+                                <th>Quantity</th>
+                                <th>Ordered By</th>
+                                <th>Date & Time</th>
+                                <th>PO #</th>
+                                <th>Order Placed</th>
+                                <th class="rounded-tr-lg">Delivered</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div> 
+    </div> 
+
+    <footer class="footer">
+        <p>&copy; <span id="currentYear"></span> Alex Leśków. Wszelkie prawa zastrzeżone.</p>
+    </footer>
+
+    <script>
+        const salespeople = [
+            { name: "Select Salesperson", prefix: "", color: "transparent" }, 
+            { name: "Patrice (PM)", prefix: "PM", color: "#FFD700" }, 
+            { name: "Brendan (BO)", prefix: "BO", color: "#87CEEB" }, 
+            { name: "John (JOR)", prefix: "JOR", color: "#32CD32" }, 
+            { name: "Sean (SOR)", prefix: "SOR", color: "#FFA07A" }, 
+            { name: "House Account (CD)", prefix: "CD", color: "#B0C4DE" }  
+        ];
+
+        window.localStockDataCache = []; 
+        window.localJobOrdersCache = []; 
+        window.placedMaterialOrderGroups = []; 
+        window.materialsCollection = null; 
+        window.jobOrdersCollection = null; 
+        window.jobOrderNumbers = []; // Inicjalizacja jako pusta tablica
+        window.orderTypes = {}; // Inicjalizacja jako pusty obiekt
+
+
+        const stockOverviewTable = document.getElementById('stockOverviewTable');
+        const jobOrderConsumptionTable = document.getElementById('jobOrderConsumptionTable');
+        const placedMaterialOrdersTable = document.getElementById('placedMaterialOrdersTable');
+        
+        const addMaterialBtn = document.getElementById('addMaterialBtn');
+        const addJobOrderBtn = document.getElementById('addJobOrderBtn');
+        const addMaterialOrderBtn = document.getElementById('addMaterialOrderBtn');
+        const currentYearSpan = document.getElementById('currentYear'); 
+
+        if (currentYearSpan) {
+            currentYearSpan.textContent = new Date().getFullYear();
+        }
+
+        // --- Funkcje pomocnicze i modale (pełne implementacje) ---
+        function getFullMaterialName(material, includeColorIndicator = false) {
+            if (typeof material === 'string') return material;
+            let nameStr = 'N/A';
+            if (material && material.name && material.thickness && material.size) {
+                 nameStr = `${material.name} ${material.thickness} ${material.size}`;
+            }
+            if (includeColorIndicator && material.name && material.name.toLowerCase() === 'foamex' && material.colorType === 'black') {
+                nameStr += ` <span class="material-color-indicator black" title="Black Foamex"></span>`;
+            } else if (includeColorIndicator && material.name && material.name.toLowerCase() === 'foamex' && material.colorType === 'white') {
+                // nameStr += ` <span class="material-color-indicator white" title="White Foamex"></span>`; 
+            }
+            return nameStr;
+        }
+        
+        function getMaterialHeaderColor(materialName) {
+            if (materialName.toLowerCase().includes('foamex')) return '#2563eb'; 
+            if (materialName.toLowerCase().includes('corrie')) return '#16a34a'; 
+            if (materialName.toLowerCase().includes('dibond')) return '#ca8a04'; 
+            return '#4b5563'; 
+        }
+
+        function showAddMaterialPropertiesModal() {
+             return new Promise((resolve) => {
+                const backdrop = document.createElement('div'); backdrop.className = 'modal-backdrop'; document.body.appendChild(backdrop);
+                const modalBox = document.createElement('div'); modalBox.className = 'modal-box';
+                let foamexColorOptionsHTML = `<div id="foamexColorOptions" class="form-group hidden"><label>Foamex Color:</label><div><label class="mr-4"><input type="radio" name="foamexColor" value="white" checked> White</label><label><input type="radio" name="foamexColor" value="black"> Black</label></div></div>`;
+                modalBox.innerHTML = `
+                    <h3 class="text-xl font-semibold mb-6">Add New Material</h3>
+                    <div class="form-group"> <label for="materialNameInput">Material Name</label> <input type="text" id="materialNameInput" placeholder="e.g., Foamex" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"> </div>
+                    ${foamexColorOptionsHTML}
+                    <div class="form-group"> <label for="materialThicknessInput">Thickness</label> <input type="text" id="materialThicknessInput" placeholder="e.g., 3mm" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"> </div>
+                    <div class="form-group"> <label for="materialSizeInput">Size</label> <input type="text" id="materialSizeInput" placeholder="e.g., 8x4" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"> </div>
+                    <div class="form-group"> <label for="initialStockInput">Initial Stock</label> <input type="number" id="initialStockInput" placeholder="0" min="0" value="0" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"> </div>
+                    <div class="form-group"> <label for="minStockInput">Minimum Stock</label> <input type="number" id="minStockInput" placeholder="0" min="0" value="0" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"> </div>
+                    <div class="flex justify-end gap-4 mt-8"> <button class="btn btn-secondary" id="modalCancelBtn">Cancel</button> <button class="btn btn-primary" id="modalAddBtn">Add Material</button> </div>`;
+                document.body.appendChild(modalBox);
+                const nameInput = document.getElementById('materialNameInput'); const foamexColorDiv = document.getElementById('foamexColorOptions');
+                const thicknessInput = document.getElementById('materialThicknessInput'); const sizeInput = document.getElementById('materialSizeInput');
+                const initialStockInput = document.getElementById('initialStockInput'); const minStockInput = document.getElementById('minStockInput');
+                const addBtn = document.getElementById('modalAddBtn'); const cancelBtn = document.getElementById('modalCancelBtn');
+                nameInput.addEventListener('input', () => { if (nameInput.value.trim().toLowerCase() === 'foamex') { foamexColorDiv.classList.remove('hidden'); } else { foamexColorDiv.classList.add('hidden'); } });
+                nameInput.focus();
+                const closeAndResolve = (value) => { document.body.removeChild(modalBox); document.body.removeChild(backdrop); resolve(value); };
+                addBtn.onclick = async () => { 
+                    const name = nameInput.value.trim(); const thickness = thicknessInput.value.trim(); const size = sizeInput.value.trim();
+                    const initialStock = parseInt(initialStockInput.value) || 0; const minStock = parseInt(minStockInput.value) || 0;
+                    let colorType = null; if (name.toLowerCase() === 'foamex') { colorType = modalBox.querySelector('input[name="foamexColor"]:checked').value; }
+                    if (!name || !thickness || !size) { showMessageBox("Material name, thickness, and size are required."); return; }
+                    const existingMaterial = window.localStockDataCache.find(m => m.name === name && m.thickness === thickness && m.size === size && (name.toLowerCase() !== 'foamex' || m.colorType === colorType) );
+                    if (existingMaterial) { showMessageBox("A material with these exact properties already exists."); return; }
+                    const materialData = { name, thickness, size, initialStock, minStock }; if (name.toLowerCase() === 'foamex') { materialData.colorType = colorType; }
+                    closeAndResolve(materialData);
+                };
+                cancelBtn.onclick = () => closeAndResolve(null);
+            });
+        }
+        function showAddJobOrderModal(title) { 
+            return new Promise((resolve) => {
+                const backdrop = document.createElement('div'); backdrop.className = 'modal-backdrop'; document.body.appendChild(backdrop);
+                const modalBox = document.createElement('div'); modalBox.className = 'modal-box';
+                let salespersonOptions = salespeople.map(s => `<option value="${s.prefix}">${s.name}</option>`).join('');
+                modalBox.innerHTML = `
+                    <h3 class="text-xl mb-6 font-semibold">${title}</h3>
+                    <div class="grid grid-cols-3 gap-4 items-end"> 
+                        <div class="form-group col-span-1"> <label for="salespersonSelect">Salesperson:</label> <select id="salespersonSelect" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400">${salespersonOptions}</select> </div>
+                        <div class="form-group col-span-2"> <label for="jobOrderNumInput">Job Order Number (digits only):</label> <input type="number" id="jobOrderNumInput" placeholder="e.g., 756421" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"> </div>
+                    </div>
+                    <div class="flex justify-end gap-4 mt-8"> <button class="btn btn-secondary" id="modalCancelBtn">Cancel</button> <button class="btn btn-primary" id="modalOkBtn">Add Job Order</button> </div>`;
+                document.body.appendChild(modalBox);
+                const salespersonSelect = document.getElementById('salespersonSelect');
+                const jobOrderNumInput = document.getElementById('jobOrderNumInput');
+                const okBtn = document.getElementById('modalOkBtn');
+                const cancelBtn = document.getElementById('modalCancelBtn');
+                jobOrderNumInput.focus();
+                const closeAndResolve = (result) => { document.body.removeChild(modalBox); document.body.removeChild(backdrop); resolve(result); };
+                okBtn.onclick = () => {
+                    const selectedPrefix = salespersonSelect.value;
+                    const numericPart = jobOrderNumInput.value.trim();
+                    if (!numericPart) { showMessageBox("Job Order number (digits) cannot be empty."); return; }
+                    if (!/^\d+$/.test(numericPart)) { showMessageBox("Job Order number must contain only digits."); return; }
+                    if (selectedPrefix === "") { showMessageBox("Please select a salesperson."); return; }
+                    const fullOrderNum = selectedPrefix + numericPart;
+                    closeAndResolve({ jobOrderNumber: fullOrderNum, prefix: selectedPrefix }); 
+                };
+                cancelBtn.onclick = () => closeAndResolve(null);
+                jobOrderNumInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') okBtn.click(); });
+            });
+        }
+        function showInputModal(message, placeholder = '', inputType = 'text', initialValue = '') { 
+            return new Promise((resolve) => {
+                const backdrop = document.createElement('div'); backdrop.className = 'modal-backdrop'; document.body.appendChild(backdrop);
+                const modalBox = document.createElement('div'); modalBox.className = 'modal-box';
+                modalBox.innerHTML = `
+                    <h3 class="text-xl font-semibold mb-4">${message}</h3>
+                    <input type="${inputType}" id="modalInput" class="w-full px-3 py-2 mb-6 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="${placeholder}" value="${initialValue}">
+                    <div class="flex justify-end gap-4"> <button class="btn btn-secondary" id="modalCancelBtn">Cancel</button> <button class="btn btn-primary" id="modalOkBtn">OK</button> </div>`;
+                document.body.appendChild(modalBox);
+                const modalInput = document.getElementById('modalInput');
+                const okBtn = document.getElementById('modalOkBtn');
+                const cancelBtn = document.getElementById('modalCancelBtn');
+                modalInput.focus(); modalInput.select();
+                const closeAndResolve = (value) => { document.body.removeChild(modalBox); document.body.removeChild(backdrop); resolve(value); };
+                okBtn.onclick = () => closeAndResolve(modalInput.value.trim());
+                cancelBtn.onclick = () => closeAndResolve(null);
+                modalInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') okBtn.click(); });
+            });
+        }
+        function showMessageBox(message, onConfirm = null) { 
+            const backdrop = document.createElement('div'); backdrop.className = 'modal-backdrop'; document.body.appendChild(backdrop);
+            const messageBox = document.createElement('div'); messageBox.className = 'modal-box text-center';
+            messageBox.innerHTML = `<p class="text-lg mb-6">${message}</p><button class="btn btn-primary" id="messageBoxOkBtn">OK</button>`;
+            document.body.appendChild(messageBox);
+            const okBtn = document.getElementById('messageBoxOkBtn');
+            okBtn.onclick = () => { document.body.removeChild(messageBox); document.body.removeChild(backdrop); if (onConfirm) onConfirm(); };
+        }
+        function showConfirmModal(message) { 
+             return new Promise((resolve) => {
+                const backdrop = document.createElement('div'); backdrop.className = 'modal-backdrop'; document.body.appendChild(backdrop);
+                const confirmBox = document.createElement('div'); confirmBox.className = 'modal-box text-center';
+                confirmBox.innerHTML = `<p class="text-lg mb-6">${message}</p><div class="flex justify-center gap-4"><button class="btn btn-primary" id="confirmYesBtn">Yes</button><button class="btn btn-secondary" id="confirmNoBtn">No</button></div>`;
+                document.body.appendChild(confirmBox);
+                const yesBtn = document.getElementById('confirmYesBtn'); const noBtn = document.getElementById('confirmNoBtn');
+                const closeAndResolve = (result) => { document.body.removeChild(confirmBox); document.body.removeChild(backdrop); resolve(result); };
+                yesBtn.onclick = () => closeAndResolve(true); noBtn.onclick = () => closeAndResolve(false);
+            });
+        }
+        function showSliderModal(message, initialValue, min = 0, max = 60) { 
+            return new Promise((resolve) => {
+                const backdrop = document.createElement('div'); backdrop.className = 'modal-backdrop'; document.body.appendChild(backdrop);
+                const modalBox = document.createElement('div'); modalBox.className = 'modal-box';
+                modalBox.innerHTML = `
+                    <h3 class="text-xl font-semibold mb-4">${message}</h3>
+                    <input type="range" id="sliderInput" min="${min}" max="${max}" value="${initialValue}" class="w-full mb-2">
+                    <p class="text-xl font-bold mb-6 text-center" id="sliderValue">${initialValue}</p>
+                    <div class="flex justify-end gap-4"> <button class="btn btn-secondary" id="modalCancelBtn">Cancel</button> <button class="btn btn-primary" id="modalOkBtn">Set</button> </div>`;
+                document.body.appendChild(modalBox);
+                const sliderInput = document.getElementById('sliderInput'); const sliderValueDisplay = document.getElementById('sliderValue');
+                const okBtn = document.getElementById('modalOkBtn'); const cancelBtn = document.getElementById('modalCancelBtn');
+                sliderInput.oninput = () => { sliderValueDisplay.textContent = sliderInput.value; };
+                const closeAndResolve = (value) => { document.body.removeChild(modalBox); document.body.removeChild(backdrop); resolve(value); };
+                okBtn.onclick = () => closeAndResolve(parseInt(sliderInput.value)); cancelBtn.onclick = () => closeAndResolve(null);
+            });
+        }
+        function showPlaceNewMaterialOrderModal() { 
+            return new Promise((resolve) => {
+                const backdrop = document.createElement('div'); backdrop.className = 'modal-backdrop'; document.body.appendChild(backdrop);
+                const modalBox = document.createElement('div'); modalBox.className = 'modal-box';
+                let materialsHTML = '';
+                window.localStockDataCache.forEach((material, index) => { 
+                    materialsHTML += `<div class="material-order-item"><label for="material_qty_${index}">${getFullMaterialName(material, true)}</label><div class="slider-container"><input type="range" id="material_qty_${index}" name="material_qty_${index}" min="0" max="60" value="0" data-material-index="${index}"><span class="slider-value" id="slider_value_${index}">0</span></div></div>`;
+                });
+                modalBox.innerHTML = `
+                    <h3 class="text-xl font-semibold mb-6">Place New Material Order</h3>
+                    <div id="materialOrderListContainer" class="mb-6 max-h-60 overflow-y-auto pr-2">${materialsHTML}</div>
+                    <div class="form-group"><label for="orderedByName">Ordered By:</label><input type="text" id="orderedByName" placeholder="Your Name" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"></div>
+                    <div class="flex justify-end gap-4 mt-8"><button class="btn btn-secondary" id="modalCancelBtn">Cancel</button><button class="btn btn-primary" id="modalConfirmOrderBtn">Confirm Order</button></div>`;
+                document.body.appendChild(modalBox);
+                window.localStockDataCache.forEach((_, index) => { 
+                    const slider = document.getElementById(`material_qty_${index}`); const display = document.getElementById(`slider_value_${index}`);
+                    if (slider && display) { slider.oninput = () => { display.textContent = slider.value; }; }
+                });
+                const orderedByNameInput = document.getElementById('orderedByName');
+                const confirmOrderBtn = document.getElementById('modalConfirmOrderBtn');
+                const cancelBtn = document.getElementById('modalCancelBtn');
+                const closeAndResolve = (value) => { document.body.removeChild(modalBox); document.body.removeChild(backdrop); resolve(value); };
+                confirmOrderBtn.onclick = () => {
+                    const orderedBy = orderedByNameInput.value.trim();
+                    if (!orderedBy) { showMessageBox("Please enter the name of the person ordering."); return; }
+                    const orderedItems = []; let atLeastOneItemSelected = false;
+                    window.localStockDataCache.forEach((materialItem, index) => { 
+                        const slider = document.getElementById(`material_qty_${index}`);
+                        if (slider) {
+                            const quantity = parseInt(slider.value);
+                            if (quantity > 0) {
+                                atLeastOneItemSelected = true;
+                                orderedItems.push({ materialName: getFullMaterialName(window.localStockDataCache[index], true), quantity: quantity });
+                            }
+                        }
+                    });
+                    if (!atLeastOneItemSelected) { showMessageBox("Please select a quantity greater than 0 for at least one material."); return; }
+                    const now = new Date();
+                    const orderGroup = {
+                        groupId: `grp_${now.getTime()}_${Math.random().toString(36).substr(2, 5)}`,
+                        items: orderedItems, orderedBy: orderedBy,
+                        dateTime: `${now.toLocaleDateString('pl-PL')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
+                        isOrderPlaced: false, isDelivered: false, purchaseOrderNumber: ""
+                    };
+                    closeAndResolve(orderGroup);
+                };
+                cancelBtn.onclick = () => closeAndResolve(null);
+            });
+        }
+
+        // --- Logika dla Firestore ---
+
+        function calculateTotalUsedInJobs(material) { 
+            let totalUsed = 0;
+            if (!window.localJobOrdersCache || !Array.isArray(window.localJobOrdersCache)) {
+                return 0; 
+            }
+            for (const orderNum in material.orders) { 
+                const jobOrderDetails = window.localJobOrdersCache.find(jo => jo.jobOrderNumber === orderNum);
+                if (jobOrderDetails && jobOrderDetails.type === 'out') { 
+                    totalUsed += (material.orders[orderNum] || 0);
+                }
+            }
+            return totalUsed;
+        }
+        
+        function calculateTotalDeliveredForMaterial(materialFullName) { 
+            let totalDelivered = 0;
+            window.placedMaterialOrderGroups.forEach(group => {
+                if (group.isDelivered) {
+                    group.items.forEach(item => {
+                        const baseItemName = item.materialName.replace(/ <span class="material-color-indicator.*?<\/span>$/, "").trim();
+                        const baseMaterialFullName = materialFullName.replace(/ <span class="material-color-indicator.*?<\/span>$/, "").trim();
+                        if (baseItemName === baseMaterialFullName) {
+                            totalDelivered += item.quantity;
+                        }
+                    });
+                }
+            });
+            return totalDelivered;
+        }
+
+        function calculateAndUpdateTotalStock(material) { 
+            const totalUsed = calculateTotalUsedInJobs(material);
+            const totalDelivered = calculateTotalDeliveredForMaterial(getFullMaterialName(material, false));
+            material.total = material.initialStock - totalUsed + totalDelivered;
+        }
+
+        function renderStockOverviewTable() {
+            const tbody = stockOverviewTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            const sortedStockData = [...window.localStockDataCache].sort((a, b) => {
+                const nameA = getFullMaterialName(a, false).toLowerCase();
+                const nameB = getFullMaterialName(b, false).toLowerCase();
+                if (nameA < nameB) return -1; if (nameA > nameB) return 1; return 0;
+            });
+
+            sortedStockData.forEach((material) => { 
+                calculateAndUpdateTotalStock(material);
+                const row = tbody.insertRow();
+                const materialCell = row.insertCell();
+                materialCell.innerHTML = getFullMaterialName(material, true); 
+                materialCell.classList.add('font-semibold', 'text-gray-200');
+                
+                const initialStockCell = row.insertCell();
+                initialStockCell.textContent = material.initialStock;
+                initialStockCell.classList.add('editable-cell');
+                initialStockCell.dataset.materialId = material.id; 
+                initialStockCell.dataset.property = 'initialStock';
+                
+                const totalUsedCell = row.insertCell(); 
+                const totalUsed = calculateTotalUsedInJobs(material);
+                totalUsedCell.textContent = totalUsed;
+                if (totalUsed === 0) { totalUsedCell.classList.add('text-default-color'); totalUsedCell.classList.remove('text-red-highlight'); } 
+                else { totalUsedCell.classList.add('text-red-highlight'); totalUsedCell.classList.remove('text-default-color');}
+                
+                const deliveredCell = row.insertCell();
+                const totalDelivered = calculateTotalDeliveredForMaterial(getFullMaterialName(material, false));
+                deliveredCell.textContent = totalDelivered;
+                if (totalDelivered > 0) { deliveredCell.classList.add('text-green-highlight');} 
+                else { deliveredCell.classList.remove('text-green-highlight'); }
+
+                const totalStockCell = row.insertCell();
+                totalStockCell.innerHTML = `<span class="total-stock-display ${material.total >= 0 ? 'total-stock-positive' : 'total-stock-negative'}">${material.total}</span>`;
+                if (material.total < material.minStock) {
+                    const warningIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    warningIcon.setAttribute("viewBox", "0 0 24 24"); warningIcon.classList.add("warning-icon");
+                    warningIcon.innerHTML = `<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75ZM12 15.75a.75.75 0 1 0 0 .009h.008a.75.75 0 0 0-.008-.009Z" clip-rule="evenodd" />`;
+                    totalStockCell.querySelector('.total-stock-display').appendChild(warningIcon);
+                }
+                const minStockCell = row.insertCell(); minStockCell.textContent = material.minStock;
+                const actionsCell = row.insertCell(); const fullMatName = getFullMaterialName(material, false);
+                actionsCell.innerHTML = `
+                    <button class="btn btn-edit" onclick="editMinStockForMaterial('${material.id}', '${fullMatName.replace(/'/g, "\\'")}')">Edit Min. Stock</button>
+                    <button class="btn btn-delete" onclick="deleteMaterialDefinition('${material.id}', '${fullMatName.replace(/'/g, "\\'")}')">Delete Material</button>`;
+            });
+        }
+        
+        function listenToStockData() {
+            if (!window.fb || !window.materialsCollection) { 
+                console.warn("Firebase (materialsCollection) not fully initialized yet for listenToStockData.");
+                if (window.db && window.fb && !window.materialsCollection) {
+                     window.materialsCollection = window.fb.collection(window.db, "materials");
+                } else if (!window.db || !window.fb) { return; }
+            }
+            const q = window.fb.query(window.materialsCollection, window.fb.orderBy("name"), window.fb.orderBy("thickness"), window.fb.orderBy("size")); 
+            window.fb.onSnapshot(q, (snapshot) => {
+                window.localStockDataCache = []; 
+                snapshot.forEach((doc) => {
+                    window.localStockDataCache.push({ id: doc.id, ...doc.data() });
+                });
+                renderAllTables(); 
+            }, (error) => {
+                console.error("Error listening to stock data: ", error);
+                showMessageBox("Error loading materials from database. Please check console for details and ensure Firestore indexes are set up if you use orderBy on multiple fields.");
+            });
+        }
+
+        function listenToJobOrders() { 
+            if (!window.fb || !window.jobOrdersCollection) {
+                console.warn("Firebase (jobOrdersCollection) not fully initialized yet for listenToJobOrders.");
+                if (window.db && window.fb && !window.jobOrdersCollection) {
+                    window.jobOrdersCollection = window.fb.collection(window.db, "jobOrders");
+                } else if (!window.db || !window.fb) { return; }
+            }
+            const q = window.fb.query(window.jobOrdersCollection, window.fb.orderBy("createdAt", "desc")); 
+
+            window.fb.onSnapshot(q, (snapshot) => {
+                const newJobOrderNumbers = []; 
+                const newOrderTypes = {};
+                const newLocalJobOrdersCache = []; 
+
+                snapshot.forEach((doc) => {
+                    const jobOrder = { id: doc.id, ...doc.data() };
+                    newLocalJobOrdersCache.push(jobOrder); 
+                    newJobOrderNumbers.push(jobOrder.jobOrderNumber); 
+                    newOrderTypes[jobOrder.jobOrderNumber] = {
+                        type: jobOrder.type || 'out', 
+                        prefix: jobOrder.prefix 
+                    };
+                });
+                window.localJobOrdersCache = newLocalJobOrdersCache; 
+                window.jobOrderNumbers = newJobOrderNumbers; 
+                window.orderTypes = newOrderTypes; 
+                
+                renderStockOverviewTable(); 
+                renderJobOrderConsumptionTable();
+            }, (error) => {
+                console.error("Error listening to job orders: ", error);
+                showMessageBox("Error loading job orders from database. Please check console.");
+            });
+        }
+
+
+        function renderJobOrderConsumptionTable() {
+            const thead = jobOrderConsumptionTable.querySelector('thead');
+            const tbody = jobOrderConsumptionTable.querySelector('tbody');
+            thead.innerHTML = ''; tbody.innerHTML = '';
+
+            const sortedStockForHeaders = [...window.localStockDataCache].sort((a, b) => { 
+                const nameA = getFullMaterialName(a, false).toLowerCase();
+                const nameB = getFullMaterialName(b, false).toLowerCase();
+                if (nameA < nameB) return -1; if (nameA > nameB) return 1; return 0;
+            });
+            
+            // Użyj window.jobOrderNumbers, które jest aktualizowane przez listenToJobOrders
+            const currentJobOrderNumbers = window.jobOrderNumbers || [];
+            const currentOrderTypes = window.orderTypes || {};
+
+
+            if (currentJobOrderNumbers.length === 0 && sortedStockForHeaders.length === 0) { 
+                 tbody.innerHTML = `<tr><td colspan="1" class="text-center text-gray-400 py-4">No job orders or materials defined yet.</td></tr>`; return;
+            }
+            if (currentJobOrderNumbers.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="${sortedStockForHeaders.length + 1}" class="text-center text-gray-400 py-4">No job orders added yet.</td></tr>`;
+                if (sortedStockForHeaders.length > 0) {
+                    const headerRow = thead.insertRow();
+                    headerRow.insertCell().outerHTML = `<th class="rounded-tl-lg material-header-cell">Job Order #</th>`;
+                    sortedStockForHeaders.forEach((material, index) => {
+                        const th = headerRow.insertCell(); th.classList.add('material-header-cell');
+                        let colorIndicatorHTML = ''; if (material.name && material.name.toLowerCase() === 'foamex' && material.colorType === 'black') { colorIndicatorHTML = ` <span class="material-color-indicator black" title="Black Foamex"></span>`;}
+                        th.innerHTML = `<div class="material-header-content"><span class="material-header-name" style="background-color: ${getMaterialHeaderColor(material.name)};">${material.name}</span><div class="material-header-details-container"><span class="material-header-details">${material.thickness}<br>${material.size}</span>${colorIndicatorHTML}</div></div>`;
+                        if (index === sortedStockForHeaders.length - 1) { th.classList.add('rounded-tr-lg'); }
+                    });
+                } return;
+            }
+
+            const headerRow = thead.insertRow();
+            headerRow.insertCell().outerHTML = `<th class="rounded-tl-lg material-header-cell">Job Order #</th>`;
+            sortedStockForHeaders.forEach((material, index) => {
+                const th = headerRow.insertCell(); th.classList.add('material-header-cell');
+                let colorIndicatorHTML = ''; if (material.name && material.name.toLowerCase() === 'foamex' && material.colorType === 'black') { colorIndicatorHTML = ` <span class="material-color-indicator black" title="Black Foamex"></span>`;}
+                th.innerHTML = `<div class="material-header-content"><span class="material-header-name" style="background-color: ${getMaterialHeaderColor(material.name)};">${material.name}</span><div class="material-header-details-container"><span class="material-header-details">${material.thickness}<br>${material.size}</span>${colorIndicatorHTML}</div></div>`;
+                if (index === sortedStockForHeaders.length - 1 && sortedStockForHeaders.length > 0) { th.classList.add('rounded-tr-lg');}
+            });
+             if (sortedStockForHeaders.length === 0 && headerRow.cells.length ===1) { headerRow.cells[0].classList.add('rounded-tr-lg');}
+
+            currentJobOrderNumbers.forEach(orderNum => { 
+                const orderDetails = currentOrderTypes[orderNum]; 
+                if (!orderDetails || orderDetails.type !== 'out') return; 
+                const row = tbody.insertRow();
+                const jobOrderCell = row.insertCell(); jobOrderCell.classList.add('job-order-id-cell'); 
+                jobOrderCell.style.display = 'flex'; jobOrderCell.style.alignItems = 'center'; 
+                if (orderDetails.prefix) {
+                    const salesperson = salespeople.find(s => s.prefix === orderDetails.prefix);
+                    if (salesperson && salesperson.color !== "transparent") {
+                        jobOrderCell.style.borderLeft = `5px solid ${salesperson.color}`;
+                        jobOrderCell.style.paddingLeft = 'calc(12px - 5px + 3px)'; 
+                    } else { jobOrderCell.style.paddingLeft = '12px';  }
+                } else { jobOrderCell.style.paddingLeft = '12px'; }
+                const orderNumSpan = document.createElement('span'); orderNumSpan.textContent = orderNum; jobOrderCell.appendChild(orderNumSpan);
+                const deleteBtn = document.createElement('button'); deleteBtn.innerHTML = '&times;'; 
+                deleteBtn.classList.add('btn-delete-job-order'); deleteBtn.title = `Delete Job Order ${orderNum}`;
+                deleteBtn.onclick = () => deleteJobOrder(orderNum); jobOrderCell.appendChild(deleteBtn);
+
+                sortedStockForHeaders.forEach((material) => { 
+                    const materialInStock = window.localStockDataCache.find(m => m.id === material.id); 
+                    const cell = row.insertCell();
+                    const quantity = materialInStock && materialInStock.orders ? (materialInStock.orders[orderNum] || 0) : 0;
+                    cell.textContent = quantity;
+                    cell.classList.add('editable-cell');
+                    if (quantity === 0) { cell.classList.add('quantity-zero'); } 
+                    else { cell.classList.add('quantity-out'); }
+                    cell.dataset.materialId = materialInStock ? materialInStock.id : ''; 
+                    cell.dataset.orderNumber = orderNum;
+                    cell.dataset.property = 'jobOrderQuantity';
+                });
+            });
+        }
+        
+        function renderPlacedMaterialOrdersTable() { /* ... jak poprzednio ... */  }
+
+        async function editMinStockForMaterial(materialId, materialFullName) { /* ... jak poprzednio (operuje na Firestore) ... */ }
+        async function deleteMaterialDefinition(materialId, materialFullName) { /* ... jak poprzednio (operuje na Firestore) ... */ }
+
+        async function deleteJobOrder(jobOrderNumberToDelete) { 
+            if (!window.fb || !window.db || !window.jobOrdersCollection) { showMessageBox("Firebase is not initialized."); return; }
+            const confirmed = await showConfirmModal(`Are you sure you want to delete Job Order "${jobOrderNumberToDelete}"? This will remove its consumption data from all materials.`);
+            if (confirmed) {
+                try {
+                    const jobOrderDocRef = window.fb.doc(window.jobOrdersCollection, jobOrderNumberToDelete); 
+                    
+                    const batch = window.fb.writeBatch(window.db);
+                    batch.delete(jobOrderDocRef); 
+
+                    window.localStockDataCache.forEach(material => {
+                        if (material.orders && material.orders[jobOrderNumberToDelete] !== undefined) {
+                            const materialRef = window.fb.doc(window.materialsCollection, material.id);
+                            const newOrders = { ...material.orders };
+                            delete newOrders[jobOrderNumberToDelete];
+                            batch.update(materialRef, { orders: newOrders });
+                        }
+                    });
+
+                    await batch.commit();
+                    showMessageBox(`Job Order "${jobOrderNumberToDelete}" deleted successfully.`);
+                } catch (error) {
+                    console.error("Error deleting job order: ", error);
+                    showMessageBox("Error deleting job order. Please check console.");
+                }
+            }
+        }
+
+
+        async function handleGenericCellEdit(event) { /* ... jak poprzednio (operuje na Firestore) ... */ }
+
+        addMaterialBtn.addEventListener('click', async () => { /* ... jak poprzednio (operuje na Firestore) ... */ });
+
+        addJobOrderBtn.addEventListener('click', async () => {
+            if (!window.fb || !window.db || !window.materialsCollection || !window.jobOrdersCollection) { 
+                showMessageBox("Firebase is not initialized. Please wait or check console."); 
+                return; 
+            }
+            const orderDetails = await showAddJobOrderModal("Enter New Job Order Details"); 
+            if (orderDetails && orderDetails.jobOrderNumber && orderDetails.prefix !== undefined) { 
+                const newOrderNum = orderDetails.jobOrderNumber; 
+                
+                const jobOrderRef = window.fb.doc(window.jobOrdersCollection, newOrderNum); 
+                const jobOrderSnap = await window.fb.getDoc(jobOrderRef);
+
+                if (jobOrderSnap.exists()) { 
+                    showMessageBox("This job order number already exists in the database!"); return; 
+                }
+
+                try {
+                    await window.fb.setDoc(jobOrderRef, { 
+                        jobOrderNumber: newOrderNum,
+                        prefix: orderDetails.prefix,
+                        type: 'out',
+                        createdAt: window.fb.serverTimestamp() 
+                    });
+
+                    const batch = window.fb.writeBatch(window.db);
+                    window.localStockDataCache.forEach(material => {
+                        const materialRef = window.fb.doc(window.materialsCollection, material.id);
+                        const newOrders = { ...material.orders, [newOrderNum]: 0 }; 
+                        batch.update(materialRef, { orders: newOrders });
+                    });
+                    await batch.commit();
+                    
+                    showMessageBox("Job order added successfully!");
+                } catch (error) {
+                    console.error("Error adding job order or updating materials: ", error);
+                    showMessageBox("Error adding job order. Please check console.");
+                }
+            }
+        });
+
+        addMaterialOrderBtn.addEventListener('click', async () => { /* ... jak poprzednio (działa lokalnie) ... */ });
+        
+        function renderAllTables() {
+            renderStockOverviewTable(); 
+            renderJobOrderConsumptionTable(); 
+            renderPlacedMaterialOrdersTable(); 
+        }
+
+        stockOverviewTable.addEventListener('dblclick', handleGenericCellEdit);
+        jobOrderConsumptionTable.addEventListener('dblclick', handleGenericCellEdit);
+        
+        window.onload = () => {
+            const checkFirebaseInterval = setInterval(() => {
+                if (window.db && window.fb) {
+                    clearInterval(checkFirebaseInterval);
+                    console.log("Firebase initialized.");
+                    window.materialsCollection = window.fb.collection(window.db, "materials"); 
+                    window.jobOrdersCollection = window.fb.collection(window.db, "jobOrders"); 
+                    console.log("Listening to Firebase data...");
+                    listenToStockData(); 
+                    listenToJobOrders(); 
+                } else {
+                    console.log("Waiting for Firebase to initialize...");
+                }
+            }, 100);
+        };
+
+    </script>
+</body>
+</html>
