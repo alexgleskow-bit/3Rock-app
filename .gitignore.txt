@@ -1,0 +1,13 @@
+# Ignoruj folder z zależnościami Node.js
+/node_modules
+
+# Pliki systemowe macOS
+.DS_Store
+
+# Pliki logów
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backupowe pliki tekstowe
+*.txt
